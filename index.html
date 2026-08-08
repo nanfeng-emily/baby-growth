@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>成长志 · 记录每一个珍贵的瞬间</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAF6F0; --bg-2: #F2EBE0; --bg-3: #E8DFD3;
+  --fg: #2D2A26; --fg-soft: #4A453E; --muted: #8B7E6E;
+  --accent: #D67D3E; --accent-light: #E89968; --accent-dark: #B5632A;
+  --sage: #6B8E5A; --pink: #E8A598; --yellow: #E8B440;
+  --card: #FFFFFF; --border: #E8DFD3; --border-soft: #F0E8DC;
+}
+* { -webkit-font-smoothing: antialiased; }
+body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--fg); overflow-x: hidden; }
+.font-serif { font-family: 'Fraunces', serif; font-feature-settings: 'opsz' 144; }
+.hero-bg { position: relative; overflow: hidden; background: radial-gradient(ellipse 900px 600px at 88% -8%, rgba(214,125,62,0.22), transparent 60%), radial-gradient(ellipse 700px 500px at 5% 105%, rgba(232,165,152,0.28), transparent 60%); }
+.float-shape { position: absolute; border-radius: 50%; filter: blur(50px); pointer-events: none; animation: float 22s ease-in-out infinite; }
+@keyframes float { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(40px,-30px) scale(1.15); } 66% { transform: translate(-25px,25px) scale(0.92); } }
+.card { background: var(--card); border: 1px solid var(--border-soft); border-radius: 18px; transition: transform 0.3s, box-shadow 0.3s; }
+.card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px -12px rgba(45,42,38,0.1); }
+.btn-primary { background: var(--fg); color: var(--bg); font-weight: 600; padding: 12px 22px; border-radius: 999px; transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; border: none; cursor: pointer; }
+.btn-primary:hover { background: var(--accent); transform: translateY(-1px); box-shadow: 0 10px 24px -8px rgba(214,125,62,0.55); }
+.btn-secondary { background: transparent; color: var(--fg); font-weight: 500; padding: 12px 22px; border-radius: 999px; border: 1px solid var(--border); transition: all 0.2s; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+.btn-secondary:hover { background: var(--bg-2); border-color: var(--muted); }
+.btn-ghost { padding: 8px 14px; border-radius: 999px; color: var(--muted); font-size: 13px; font-weight: 500; transition: all 0.2s; cursor: pointer; background: transparent; border: none; }
+.btn-ghost:hover { background: var(--bg-2); color: var(--fg); }
+.chip { padding: 7px 16px; border-radius: 999px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
+.chip.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip:hover:not(.active) { background: var(--bg-2); color: var(--fg); }
+.modal-overlay { position: fixed; inset: 0; background: rgba(45,42,38,0.55); backdrop-filter: blur(10px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
+.modal-content { background: var(--card); border-radius: 24px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1); box-shadow: 0 30px 80px -20px rgba(0,0,0,0.3); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+input[type="text"], input[type="date"], input[type="number"], textarea, select { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 11px; font-size: 14px; font-family: 'Manrope', sans-serif; background: var(--card); color: var(--fg); transition: all 0.2s; }
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(214,125,62,0.13); }
+textarea { resize: vertical; min-height: 80px; }
+label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.3px; text-transform: uppercase; }
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--fg); color: var(--bg); padding: 12px 22px; border-radius: 999px; font-size: 14px; font-weight: 500; z-index: 200; opacity: 0; transition: all 0.35s cubic-bezier(0.22,1,0.36,1); box-shadow: 0 14px 40px -10px rgba(0,0,0,0.35); max-width: 90vw; text-align: center; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s, transform 0.7s; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.timeline-item { position: relative; padding-left: 110px; padding-bottom: 28px; }
+.timeline-item::before { content: ''; position: absolute; left: 92px; top: 24px; bottom: -8px; width: 2px; background: var(--border); }
+.timeline-item:last-child::before { display: none; }
+.timeline-marker { position: absolute; left: 0; top: 4px; width: 88px; text-align: right; padding-right: 24px; }
+.timeline-marker .month-day { font-family: 'Fraunces', serif; font-weight: 600; font-size: 16px; color: var(--fg); line-height: 1.2; }
+.timeline-marker .year { font-size: 11px; color: var(--muted); letter-spacing: 1px; font-weight: 600; }
+.timeline-dot { position: absolute; right: -7px; top: 6px; width: 14px; height: 14px; border-radius: 50%; background: var(--card); border: 3px solid var(--accent); z-index: 2; }
+.timeline-dot.milestone { border-color: var(--sage); }
+.timeline-dot.measurement { border-color: var(--pink); }
+.timeline-dot.photo { border-color: var(--yellow); }
+.timeline-card { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px; transition: all 0.3s; position: relative; }
+.timeline-card:hover { transform: translateX(4px); box-shadow: 0 12px 28px -10px rgba(45,42,38,0.12); }
+.timeline-card img, .timeline-card video { width: 100%; border-radius: 12px; margin-top: 12px; cursor: pointer; transition: transform 0.3s; }
+.type-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.type-diary { background: rgba(214,125,62,0.13); color: var(--accent-dark); }
+.type-milestone { background: rgba(107,142,90,0.16); color: var(--sage); }
+.type-measurement { background: rgba(232,165,152,0.22); color: #C77264; }
+.type-photo { background: rgba(232,180,64,0.18); color: #A87F1F; }
+.year-divider { margin: 32px 0 24px 110px; position: relative; display: flex; align-items: center; gap: 16px; }
+.year-divider::before { content: ''; position: absolute; left: -18px; top: 50%; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.year-divider span { font-family: 'Fraunces', serif; font-weight: 700; font-size: 32px; color: var(--fg); letter-spacing: -0.5px; }
+.year-divider .line { flex: 1; height: 1px; background: var(--border); }
+.milestone-card { background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 18px; transition: all 0.3s; position: relative; overflow: hidden; }
+.milestone-card.achieved { border-color: rgba(107,142,90,0.35); background: linear-gradient(135deg, var(--card) 0%, rgba(107,142,90,0.04) 100%); }
+.milestone-card.achieved::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--sage); }
+.milestone-card:not(.achieved) { opacity: 0.65; }
+.milestone-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px -8px rgba(45,42,38,0.1); }
+.milestone-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; background: var(--bg-2); margin-bottom: 12px; }
+.milestone-card.achieved .milestone-icon { background: rgba(107,142,90,0.15); }
+.gallery-grid { column-count: 4; column-gap: 16px; }
+@media (max-width: 1024px) { .gallery-grid { column-count: 3; } }
+@media (max-width: 640px) { .gallery-grid { column-count: 2; } }
+.gallery-item { break-inside: avoid; margin-bottom: 16px; border-radius: 14px; overflow: hidden; cursor: pointer; position: relative; transition: transform 0.3s; }
+.gallery-item:hover { transform: scale(1.02); }
+.gallery-item img, .gallery-item video { width: 100%; height: auto; display: block; }
+.gallery-item .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(45,42,38,0.85), transparent 60%); opacity: 0; transition: opacity 0.3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 14px; color: white; pointer-events: none; }
+.gallery-item:hover .overlay { opacity: 1; }
+.gallery-item .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+.tab-btn { padding: 9px 18px; border-radius: 999px; font-weight: 500; font-size: 13px; cursor: pointer; transition: all 0.2s; color: var(--muted); background: transparent; border: none; }
+.tab-btn.active { background: var(--card); color: var(--fg); box-shadow: 0 2px 8px -2px rgba(45,42,38,0.12); }
+.avatar { border-radius: 50%; background: linear-gradient(135deg, var(--accent-light), var(--pink)); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-weight: 600; color: white; flex-shrink: 0; overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.image-upload-area { border: 2px dashed var(--border); border-radius: 14px; padding: 28px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg-2); position: relative; overflow: hidden; }
+.image-upload-area:hover { border-color: var(--accent); background: rgba(214,125,62,0.05); }
+.image-upload-area.has-image { padding: 12px; border-style: solid; background: transparent; }
+.type-option { padding: 10px 14px; border-radius: 11px; border: 1px solid var(--border); background: var(--card); cursor: pointer; transition: all 0.2s; text-align: center; font-size: 13px; font-weight: 500; color: var(--muted); }
+.type-option:hover { border-color: var(--muted); color: var(--fg); }
+.type-option.active { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+.nav-bar { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(250,246,240,0.85); border-bottom: 1px solid var(--border-soft); position: sticky; top: 0; z-index: 50; }
+.child-selector { background: var(--bg-2); border-radius: 999px; padding: 4px; display: flex; gap: 2px; }
+.child-tab { padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; border: none; background: transparent; }
+.child-tab.active { background: var(--card); color: var(--fg); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.child-tab:hover:not(.active) { color: var(--fg); }
+.big-number { font-family: 'Fraunces', serif; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -2px; line-height: 0.95; }
+.section-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 36px; letter-spacing: -1px; line-height: 1.1; }
+@media (max-width: 768px) { .section-title { font-size: 28px; } .timeline-item { padding-left: 70px; } .timeline-item::before { left: 52px; } .timeline-marker { width: 50px; padding-right: 14px; } .year-divider { margin-left: 70px; } }
+.action-btns { position: absolute; top: 14px; right: 14px; display: flex; gap: 6px; z-index: 10; }
+.action-btn { width: 32px; height: 32px; border-radius: 8px; background: var(--bg-2); color: var(--muted); cursor: pointer; transition: all 0.2s; border: none; display: flex; align-items: center; justify-content: center; }
+.action-btn:hover { background: var(--accent); color: white; }
+.action-btn.delete-btn:hover { background: #C77264; color: white; }
+.welcome-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.welcome-screen.active { display: flex; }
+.permission-banner { position: fixed; top: 0; left: 0; right: 0; background: var(--accent); color: white; padding: 10px; text-align: center; z-index: 999; display: none; }
+.unsupported-banner { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div id="unsupported-banner" class="unsupported-banner">
+  <div class="max-w-md">
+    <h2 class="font-serif text-2xl font-bold mb-4">浏览器环境不兼容</h2>
+    <p class="mb-6" style="color: var(--muted);">此“网盘同步版”需要调用高级文件系统权限。<br><br>请务必在<strong>电脑端</strong>使用 <strong>Chrome</strong> 或 <strong>Edge</strong> 浏览器打开本网页。<br><br>（暂不支持手机、平板、Safari、Firefox 或微信内置浏览器）</p>
+  </div>
+</div>
+
+<div id="permission-banner" class="permission-banner">
+  需要访问文件夹权限以加载和保存数据 <button onclick="grantPermission()" class="btn-primary" style="padding: 4px 12px; font-size: 12px; background: white; color: var(--accent-dark);">授予权限</button>
+</div>
+
+<div id="welcome-screen" class="welcome-screen">
+  <div class="max-w-md">
+    <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6" style="background: linear-gradient(135deg, var(--accent), var(--pink));">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-8-4.5-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6.5-8 11-8 11z"/></svg>
+    </div>
+    <h2 class="font-serif text-3xl font-bold mb-4">欢迎使用成长志</h2>
+    <p class="mb-6" style="color: var(--muted);">为了实现多设备同步和永久存储，请选择您的<strong>夸克网盘同步盘文件夹</strong>（或其他任意文件夹）作为数据存储位置。</p>
+    <button onclick="connectAndStart()" class="btn-primary justify-center w-full">选择文件夹并开始</button>
+    <p class="text-xs mt-4" style="color: var(--muted);">提示：请不要选择系统受保护的文件夹（如 C盘根目录）。</p>
+  </div>
+</div>
+
+<nav class="nav-bar">
+  <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, var(--accent), var(--pink));">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-8-4.5-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6.5-8 11-8 11z"/></svg>
+      </div>
+      <div><div class="font-serif font-bold text-lg leading-none">成长志</div><div class="text-xs" style="color: var(--muted);">已连接本地文件夹</div></div>
+    </div>
+    <div id="child-selector" class="child-selector hidden md:flex"></div>
+    <div class="flex items-center gap-2">
+      <button class="btn-ghost hidden sm:flex items-center gap-1.5" onclick="openSettings()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        设置
+      </button>
+      <button class="btn-primary" onclick="openRecordModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        添加记录
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <section class="hero-bg">
+    <div class="float-shape" style="width: 400px; height: 400px; background: var(--accent); top: -100px; right: -50px; opacity: 0.18;"></div>
+    <div class="float-shape" style="width: 350px; height: 350px; background: var(--pink); bottom: -100px; left: -50px; opacity: 0.25; animation-delay: -8s;"></div>
+    <div class="max-w-7xl mx-auto px-6 py-16 md:py-24 relative">
+      <div class="grid lg:grid-cols-5 gap-12 items-center">
+        <div class="lg:col-span-3">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6" style="background: rgba(214,125,62,0.12); color: var(--accent-dark);">
+            <span class="w-1.5 h-1.5 rounded-full" style="background: var(--accent); animation: pulse 2s infinite;"></span>
+            <span class="text-xs font-semibold tracking-wider">GROWTH JOURNAL</span>
+          </div>
+          <h1 class="font-serif font-bold leading-[0.95] tracking-tight mb-6" style="font-size: clamp(48px, 7vw, 88px);">记录每一个<br><span style="color: var(--accent);">珍贵的</span>瞬间</h1>
+          <p class="text-lg leading-relaxed max-w-xl mb-8" style="color: var(--fg-soft);">孩子的成长转瞬即逝。从第一次微笑到第一步路，从牙牙学语到蹒跚前行，把那些值得珍藏一辈子的时刻，温柔地记录下来。</p>
+          <div class="flex flex-wrap gap-3">
+            <button class="btn-primary" onclick="openRecordModal()">添加新记录</button>
+            <button class="btn-secondary" onclick="document.getElementById('timeline-section').scrollIntoView({behavior:'smooth'})">浏览时间线</button>
+          </div>
+        </div>
+        <div class="lg:col-span-2">
+          <div id="hero-child-card" class="card p-8 relative" style="background: rgba(255,255,255,0.7); backdrop-filter: blur(10px);"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <section class="max-w-7xl mx-auto px-6 -mt-10 md:-mt-12 relative z-10">
+    <div id="stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+  </section>
+  
+  <section id="timeline-section" class="max-w-7xl mx-auto px-6 py-20 md:py-28">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 reveal">
+      <div>
+        <div class="text-sm font-semibold tracking-wider mb-3" style="color: var(--accent);">— 成长时间线</div>
+        <h2 class="section-title">每一个故事，都值得被讲述</h2>
+        <p class="mt-3 max-w-lg" style="color: var(--muted);">按时间倒序排列的成长记录，支持按类型筛选。</p>
+      </div>
+      <div id="timeline-filters" class="flex flex-wrap gap-2">
+        <button class="chip active" data-filter="all">全部</button>
+        <button class="chip" data-filter="diary">日记</button>
+        <button class="chip" data-filter="milestone">里程碑</button>
+        <button class="chip" data-filter="measurement">测量</button>
+        <button class="chip" data-filter="photo">照片</button>
+      </div>
+    </div>
+    <div id="timeline-container" class="reveal"></div>
+  </section>
+  
+  <section id="growth-section" class="py-20 md:py-28" style="background: var(--bg-2);">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 reveal">
+        <div>
+          <div class="text-sm font-semibold tracking-wider mb-3" style="color: var(--sage);">— 成长曲线</div>
+          <h2 class="section-title">身体发育，一目了然</h2>
+        </div>
+        <div class="flex gap-1 p-1 rounded-full" style="background: var(--bg-3);">
+          <button class="tab-btn active" data-metric="height" onclick="switchMetric('height')">身高</button>
+          <button class="tab-btn" data-metric="weight" onclick="switchMetric('weight')">体重</button>
+        </div>
+      </div>
+      <div class="grid lg:grid-cols-3 gap-6 reveal">
+        <div class="lg:col-span-2 card p-6"><div style="height: 400px;"><canvas id="growth-chart"></canvas></div></div>
+        <div class="space-y-4">
+          <div id="current-stats" class="card p-6"></div>
+          <div id="growth-trend" class="card p-6"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <section id="milestones-section" class="max-w-7xl mx-auto px-6 py-20 md:py-28">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 reveal">
+      <div>
+        <div class="text-sm font-semibold tracking-wider mb-3" style="color: var(--pink);">— 成就里程碑</div>
+        <h2 class="section-title">每一个第一次，都值得庆祝</h2>
+      </div>
+      <div id="milestone-progress" class="text-right"></div>
+    </div>
+    <div id="milestones-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 reveal"></div>
+  </section>
+  
+  <section id="gallery-section" class="py-20 md:py-28" style="background: var(--bg-2);">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="mb-12 reveal">
+        <div class="text-sm font-semibold tracking-wider mb-3" style="color: var(--yellow);">— 照片墙</div>
+        <h2 class="section-title">用画面留住时光</h2>
+      </div>
+      <div id="gallery-grid" class="gallery-grid reveal"></div>
+      <div id="gallery-empty" class="empty-state hidden"><p>还没有照片记录</p></div>
+    </div>
+  </section>
+  
+  <footer class="border-t" style="border-color: var(--border-soft);">
+    <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm" style="color: var(--muted);">
+      <div class="flex items-center gap-2"><span>成长志 · 数据直接存于您选定的文件夹中</span></div>
+    </div>
+  </footer>
+</main>
+
+<div id="modal-record" class="modal-overlay">
+  <div class="modal-content">
+    <div class="p-6 border-b flex items-center justify-between" style="border-color: var(--border-soft);">
+      <h3 id="record-modal-title" class="font-serif text-2xl font-semibold">添加新记录</h3>
+      <button type="button" onclick="closeModal('modal-record')" class="btn-ghost p-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <form id="record-form" class="p-6 space-y-5" onsubmit="handleRecordSubmit(event)">
+      <input type="hidden" name="rec_id" id="record-id">
+      <div>
+        <label>记录类型</label>
+        <div class="grid grid-cols-4 gap-2">
+          <div class="type-option active" data-type="diary" onclick="selectType('diary')">日记</div>
+          <div class="type-option" data-type="milestone" onclick="selectType('milestone')">里程碑</div>
+          <div class="type-option" data-type="measurement" onclick="selectType('measurement')">测量</div>
+          <div class="type-option" data-type="photo" onclick="selectType('photo')">照片</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label>日期</label><input type="date" name="date" id="record-date" required></div>
+        <div id="milestone-select-wrap" class="hidden"><label>里程碑</label><select name="milestone" id="milestone-select"></select></div>
+      </div>
+      <div><label>标题</label><input type="text" name="title" placeholder="给这个时刻起个名字..." required></div>
+      <div id="content-field"><label>内容</label><textarea name="content" placeholder="记录下今天发生的故事..." rows="4"></textarea></div>
+      <div id="measurement-fields" class="hidden grid grid-cols-2 gap-4">
+        <div><label>身高</label><input type="number" name="height" placeholder="cm" step="0.1" min="0"></div>
+        <div><label>体重</label><input type="number" name="weight" placeholder="kg" step="0.1" min="0"></div>
+      </div>
+      <div>
+        <label>照片 / 视频</label>
+        <div class="image-upload-area" id="media-upload-area" onclick="document.getElementById('media-input').click()">
+          <input type="file" accept="image/*,video/*" id="media-input" hidden>
+          <div id="upload-placeholder">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 8px; color: var(--muted);"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p class="text-sm" style="color: var(--muted);">点击上传照片或视频</p>
+            <p class="text-xs mt-1" style="color: var(--muted);">重新上传会覆盖原文件</p>
+          </div>
+          <div id="media-preview" class="hidden"></div>
+        </div>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="closeModal('modal-record')" class="btn-secondary flex-1 justify-center">取消</button>
+        <button type="submit" class="btn-primary flex-1 justify-center" id="submit-btn">保存记录</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-settings" class="modal-overlay">
+  <div class="modal-content">
+    <div class="p-6 border-b flex items-center justify-between" style="border-color: var(--border-soft);">
+      <h3 class="font-serif text-2xl font-semibold">设置</h3>
+      <button type="button" onclick="closeModal('modal-settings')" class="btn-ghost p-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="p-6 space-y-6">
+      <div>
+        <div class="flex items-center justify-between mb-4"><h4 class="font-semibold text-lg">孩子档案</h4><button onclick="openChildModal()" class="btn-ghost text-sm" style="color: var(--accent);">+ 添加孩子</button></div>
+        <div id="children-list" class="space-y-3"></div>
+      </div>
+      <div class="pt-6 border-t" style="border-color: var(--border-soft);">
+        <h4 class="font-semibold text-lg mb-3">数据迁移与存储</h4>
+        <p class="text-xs mb-3" style="color: var(--muted);">文字数据已自动实时保存到文件夹的 db.json 中。您也可以点击下方按钮手动下载备份。</p>
+        <div class="grid grid-cols-1 gap-3">
+          <button onclick="exportData()" class="btn-secondary justify-center w-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            下载并备份文字数据(JSON)
+          </button>
+          <input type="file" id="import-json-input" accept=".json" hidden onchange="importJSON(event)">
+          <button onclick="document.getElementById('import-json-input').click()" class="btn-secondary justify-center w-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            导入旧版日记文字(JSON)
+          </button>
+          <button onclick="scanAndImportMedia()" class="btn-secondary justify-center w-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            扫描根目录并导入散落的照片/视频
+          </button>
+          <button onclick="changeFolder()" class="btn-secondary justify-center w-full">更换存储文件夹</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-child" class="modal-overlay">
+  <div class="modal-content">
+    <div class="p-6 border-b flex items-center justify-between" style="border-color: var(--border-soft);">
+      <h3 id="child-modal-title" class="font-serif text-2xl font-semibold">添加孩子</h3>
+      <button type="button" onclick="closeModal('modal-child')" class="btn-ghost p-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <form id="child-form" class="p-6 space-y-5" onsubmit="handleChildSubmit(event)">
+      <input type="hidden" name="rec_id">
+      <div><label>昵称</label><input type="text" name="nickname" placeholder="如：小满" required></div>
+      <div><label>姓名</label><input type="text" name="name" placeholder="真实姓名（可选）"></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label>出生日期</label><input type="date" name="birthdate" required></div>
+        <div><label>性别</label><select name="gender"><option value="M">男孩</option><option value="F">女孩</option></select></div>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="closeModal('modal-child')" class="btn-secondary flex-1 justify-center">取消</button>
+        <button type="submit" class="btn-primary flex-1 justify-center">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-image-viewer" class="modal-overlay" style="background: rgba(0,0,0,0.9);" onclick="closeModal('modal-image-viewer')">
+  <div id="viewer-container" class="relative max-w-5xl w-full" onclick="event.stopPropagation()"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+window.onerror = function(msg, url, line, col, error) {
+  console.error("全局错误捕获:", msg, error);
+  return false;
+};
+
+const HandleDB = {
+  db: null,
+  async init() {
+    return new Promise((resolve) => {
+      try {
+        if (!window.indexedDB) { resolve(); return; }
+        const req = indexedDB.open('HandleDB', 1);
+        req.onupgradeneeded = e => e.target.result.createObjectStore('handles');
+        req.onsuccess = e => { this.db = e.target.result; resolve(); };
+        req.onerror = () => resolve();
+      } catch (e) { resolve(); }
+    });
+  },
+  async get(key) {
+    return new Promise(resolve => {
+      try {
+        if (!this.db) return resolve(null);
+        const tx = this.db.transaction('handles', 'readonly');
+        const req = tx.objectStore('handles').get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+      } catch (e) { resolve(null); }
+    });
+  },
+  async set(key, val) {
+    return new Promise(resolve => {
+      try {
+        if (!this.db) return resolve(false);
+        const tx = this.db.transaction('handles', 'readwrite');
+        tx.objectStore('handles').put(val, key);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      } catch (e) { resolve(false); }
+    });
+  }
+};
+
+const FSAdapter = {
+  rootDir: null,
+  mediaDir: null,
+  isAvailable: false,
+  urlCache: {},
+
+  async init() {
+    if (!window.showDirectoryPicker) return false;
+    await HandleDB.init();
+    const savedHandle = await HandleDB.get('rootDir');
+    if (savedHandle) {
+      this.rootDir = savedHandle;
+      return true;
+    }
+    return false;
+  },
+  async verifyPermission() {
+    if (!this.rootDir) return false;
+    try {
+      const opts = { mode: 'readwrite' };
+      if ((await this.rootDir.queryPermission(opts)) === 'granted') {
+        this.isAvailable = true;
+        return true;
+      }
+      if ((await this.rootDir.requestPermission(opts)) === 'granted') {
+        this.isAvailable = true;
+        return true;
+      }
+    } catch (e) {}
+    this.isAvailable = false;
+    return false;
+  },
+  async connectNewFolder() {
+    try {
+      this.rootDir = await window.showDirectoryPicker({ mode: 'readwrite' });
+      await HandleDB.set('rootDir', this.rootDir);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+  async setupDirs() {
+    if (!this.rootDir) return;
+    this.mediaDir = await this.rootDir.getDirectoryHandle('media', { create: true });
+  },
+  async loadDB() {
+    try {
+      const fileHandle = await this.rootDir.getFileHandle('db.json');
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+      return JSON.parse(text);
+    } catch (e) {
+      return null;
+    }
+  },
+  async saveDB(data) {
+    if (!this.rootDir) return;
+    try {
+      const fileHandle = await this.rootDir.getFileHandle('db.json', { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(JSON.stringify(data, null, 2));
+      await writable.close();
+    } catch (e) {
+      toast("保存失败：" + e.message);
+    }
+  },
+  async saveMedia(blob, ext) {
+    const fileName = `media_${Date.now()}.${ext}`;
+    const fileHandle = await this.mediaDir.getFileHandle(fileName, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return fileName;
+  },
+  async moveMediaToFolder(fileHandle) {
+    const file = await fileHandle.getFile();
+    const ext = file.name.split('.').pop().toLowerCase();
+    const newName = `media_${Date.now()}_${file.name}`; 
+    const newFileHandle = await this.mediaDir.getFileHandle(newName, { create: true });
+    const writable = await newFileHandle.createWritable();
+    await writable.write(file);
+    await writable.close();
+    await this.rootDir.removeEntry(fileHandle.name);
+    return newName;
+  },
+  async getMediaUrl(mediaId) {
+    if (!mediaId) return '';
+    if (mediaId.startsWith('http')) return mediaId; 
+    if (this.urlCache[mediaId]) return this.urlCache[mediaId];
+    try {
+      const fileHandle = await this.mediaDir.getFileHandle(mediaId);
+      const file = await fileHandle.getFile();
+      const url = URL.createObjectURL(file);
+      this.urlCache[mediaId] = url;
+      return url;
+    } catch (e) { return ''; }
+  },
+  async deleteMedia(mediaId) {
+    if (!mediaId || mediaId.startsWith('http')) return;
+    try { await this.mediaDir.removeEntry(mediaId); } catch (e) {}
+  }
+};
+
+async function getMediaUrl(mediaId) { return await FSAdapter.getMediaUrl(mediaId); }
+
+async function loadMediaElements() {
+  const elements = document.querySelectorAll('[data-media-id]');
+  for (const el of elements) {
+    const id = el.dataset.mediaId;
+    const url = await getMediaUrl(id);
+    if (url) el.src = url;
+  }
+}
+
+const MILESTONES = [
+  { id: 'birth', name: '出生', icon: '🎉', defaultAge: '0月' },
+  { id: 'first_smile', name: '第一次微笑', icon: '😊', defaultAge: '1-2月' },
+  { id: 'lift_head', name: '抬头', icon: '💪', defaultAge: '2-3月' },
+  { id: 'roll_over', name: '翻身', icon: '🔄', defaultAge: '4-6月' },
+  { id: 'first_tooth', name: '长第一颗牙', icon: '🦷', defaultAge: '4-10月' },
+  { id: 'sit_up', name: '独坐', icon: '🪑', defaultAge: '6-8月' },
+  { id: 'crawl', name: '爬行', icon: '🐾', defaultAge: '8-10月' },
+  { id: 'first_word', name: '叫爸爸妈妈', icon: '🗣️', defaultAge: '10-14月' },
+  { id: 'stand_up', name: '扶站', icon: '🧍', defaultAge: '9-12月' },
+  { id: 'first_walk', name: '独立行走', icon: '🚶', defaultAge: '12-15月' },
+  { id: 'first_birthday', name: '一周岁', icon: '🎂', defaultAge: '12月' },
+  { id: 'use_spoon', name: '用勺吃饭', icon: '🥄', defaultAge: '12-18月' },
+  { id: 'second_birthday', name: '两周岁', icon: '🎂', defaultAge: '24月' },
+  { id: 'short_sentence', name: '说短句', icon: '💬', defaultAge: '18-24月' },
+  { id: 'potty_train', name: '如厕训练', icon: '🚽', defaultAge: '18-24月' },
+  { id: 'know_colors', name: '认识颜色', icon: '🎨', defaultAge: '24-36月' },
+  { id: 'third_birthday', name: '三周岁', icon: '🎂', defaultAge: '36月' },
+  { id: 'kindergarten', name: '上幼儿园', icon: '🏫', defaultAge: '36月+' },
+  { id: 'count_to_ten', name: '数到10', icon: '🔢', defaultAge: '36-48月' },
+  { id: 'ride_tricycle', name: '骑三轮车', icon: '🚲', defaultAge: '36-48月' }
+];
+
+const SAMPLE_CHILD = { id: 'c1', name: '小满', nickname: '满满', birthdate: '2022-03-15', gender: 'M', avatar: null };
+const SAMPLE_RECORDS = [
+  { id: 'r1', childId: 'c1', type: 'milestone', date: '2022-03-15', title: '小满出生了', content: '今天 14:32，我们的宝贝降生。体重 3.4kg，身长 51cm。', mediaId: 'https://picsum.photos/seed/babybirth/800/600.jpg', mediaType: 'image', milestone: 'birth' },
+  { id: 'r2', childId: 'c1', type: 'measurement', date: '2022-03-15', title: '出生体检', content: '出生第一次体检，各项指标正常。', measurements: { height: 51, weight: 3.4 } },
+  { id: 'r3', childId: 'c1', type: 'milestone', date: '2022-04-15', title: '满月啦', content: '一个月过去了，体重增长了 1.2kg。', mediaId: 'https://picsum.photos/seed/babymonth/800/600.jpg', mediaType: 'image', milestone: 'first_smile' },
+  { id: 'r4', childId: 'c1', type: 'measurement', date: '2022-04-15', title: '满月体检', content: '满月体检，发育正常。', measurements: { height: 55, weight: 4.6 } },
+  { id: 'r5', childId: 'c1', type: 'milestone', date: '2022-07-20', title: '会翻身了', content: '今天小满第一次自己翻身。', mediaId: 'https://picsum.photos/seed/babyroll/800/600.jpg', mediaType: 'image', milestone: 'roll_over' },
+  { id: 'r6', childId: 'c1', type: 'measurement', date: '2022-09-15', title: '6个月体检', content: '半岁体检一切正常。', measurements: { height: 68, weight: 8.2 } },
+  { id: 'r7', childId: 'c1', type: 'milestone', date: '2023-03-15', title: '一周岁生日', content: '今天是小满的一周岁生日！', mediaId: 'https://picsum.photos/seed/babybd1/800/600.jpg', mediaType: 'image', milestone: 'first_birthday' },
+  { id: 'r8', childId: 'c1', type: 'measurement', date: '2023-03-15', title: '一周岁体检', content: '一岁体检。', measurements: { height: 76, weight: 9.8 } },
+  { id: 'r9', childId: 'c1', type: 'milestone', date: '2023-04-10', title: '第一次独立行走', content: '今天小满第一次独立走了 5 步！快来看视频！', mediaId: 'https://www.w3schools.com/html/mov_bbb.mp4', mediaType: 'video', milestone: 'first_walk' },
+  { id: 'r10', childId: 'c1', type: 'diary', date: '2023-07-08', title: '公园玩耍', content: '今天带小满去公园。', mediaId: 'https://picsum.photos/seed/babypark/800/600.jpg', mediaType: 'image' },
+  { id: 'r11', childId: 'c1', type: 'measurement', date: '2023-09-15', title: '18个月体检', content: '18个月体检。', measurements: { height: 82, weight: 11.5 } },
+  { id: 'r12', childId: 'c1', type: 'milestone', date: '2024-02-10', title: '能说短句了', content: '今天小满说出了第一个完整短句："妈妈抱抱"。', milestone: 'short_sentence' },
+  { id: 'r13', childId: 'c1', type: 'measurement', date: '2024-03-15', title: '2岁体检', content: '2岁体检。', measurements: { height: 88, weight: 12.8 } },
+  { id: 'r14', childId: 'c1', type: 'photo', date: '2024-05-01', title: '第一次看海', content: '带小满去了海边。', mediaId: 'https://picsum.photos/seed/babybeach/800/600.jpg', mediaType: 'image' }
+];
+
+const DB = {
+  data: null,
+  async load() {
+    const loadedData = await FSAdapter.loadDB();
+    if (loadedData && Array.isArray(loadedData.children) && Array.isArray(loadedData.records)) {
+      this.data = loadedData;
+      this.syncMilestones();
+    } else {
+      this.data = this.getDefault();
+      await this.save();
+    }
+    return this.data;
+  },
+  syncMilestones() {
+    const existing = this.data.milestones || [];
+    this.data.milestones = MILESTONES.map(m => {
+      const e = existing.find(x => x.id === m.id);
+      return e ? { ...m, achieved: e.achieved || false, date: e.date || null } : { ...m, achieved: false, date: null };
+    });
+  },
+  getDefault() {
+    const milestones = MILESTONES.map(m => ({ ...m, achieved: false, date: null }));
+    SAMPLE_RECORDS.filter(r => r.type === 'milestone' && r.milestone).forEach(r => {
+      const m = milestones.find(m => m.id === r.milestone);
+      if (m) { m.achieved = true; m.date = r.date; }
+    });
+    return { children: [SAMPLE_CHILD], activeChildId: 'c1', records: SAMPLE_RECORDS, milestones };
+  },
+  async save() {
+    await FSAdapter.saveDB(this.data);
+  },
+  async addChild(child) {
+    child.id = 'c' + Date.now();
+    this.data.children.push(child);
+    this.data.activeChildId = child.id;
+    await this.save();
+  },
+  async updateChild(id, updates) {
+    const c = this.data.children.find(c => c.id === id);
+    if (c) { Object.assign(c, updates); await this.save(); }
+  },
+  async removeChild(id) {
+    if (this.data.children.length <= 1) return false;
+    const recordsToDelete = this.data.records.filter(r => r.childId === id);
+    for (const r of recordsToDelete) { if (r.mediaId) await FSAdapter.deleteMedia(r.mediaId); }
+    this.data.children = this.data.children.filter(c => c.id !== id);
+    this.data.records = this.data.records.filter(r => r.childId !== id);
+    if (this.data.activeChildId === id) this.data.activeChildId = this.data.children[0].id;
+    await this.save();
+    return true;
+  },
+  async addRecord(record) {
+    record.id = 'r' + Date.now();
+    record.childId = this.data.activeChildId;
+    this.data.records.push(record);
+    if (record.type === 'milestone' && record.milestone) {
+      const m = this.data.milestones.find(m => m.id === record.milestone);
+      if (m) { m.achieved = true; m.date = record.date; }
+    }
+    await this.save();
+  },
+  async updateRecord(id, updatedData, oldMediaId) {
+    const idx = this.data.records.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      const oldRecord = this.data.records[idx];
+      
+      // 处理里程碑状态更替
+      if (oldRecord.type === 'milestone' && oldRecord.milestone && (oldRecord.milestone !== updatedData.milestone || updatedData.type !== 'milestone')) {
+        const m = this.data.milestones.find(m => m.id === oldRecord.milestone);
+        if (m) { m.achieved = false; m.date = null; }
+      }
+      if (updatedData.type === 'milestone' && updatedData.milestone) {
+        const m = this.data.milestones.find(m => m.id === updatedData.milestone);
+        if (m) { m.achieved = true; m.date = updatedData.date; }
+      }
+
+      // 如果有新上传的媒体，删除旧媒体
+      if (updatedData.mediaId !== oldMediaId && oldMediaId) {
+        await FSAdapter.deleteMedia(oldMediaId);
+      }
+
+      // 保留 childId 和 id，更新其他字段
+      this.data.records[idx] = { ...oldRecord, ...updatedData };
+      await this.save();
+    }
+  },
+  async removeRecord(id) {
+    const record = this.data.records.find(r => r.id === id);
+    if (record && record.mediaId) { await FSAdapter.deleteMedia(record.mediaId); }
+    if (record && record.type === 'milestone' && record.milestone) {
+      const m = this.data.milestones.find(m => m.id === record.milestone);
+      if (m) { m.achieved = false; m.date = null; }
+    }
+    this.data.records = this.data.records.filter(r => r.id !== id);
+    await this.save();
+  },
+  getActiveChild() { return this.data.children.find(c => c.id === this.data.activeChildId); },
+  getRecords(childId = null) {
+    const cid = childId || this.data.activeChildId;
+    return this.data.records.filter(r => r.childId === cid).sort((a, b) => new Date(b.date) - new Date(a.date));
+  },
+  getMeasurements(childId = null) {
+    return this.data.records(childId).filter(r => r.type === 'measurement' && r.measurements).sort((a, b) => new Date(a.date) - new Date(b.date));
+  }
+};
+
+function calcAge(birthdate, toDate = new Date()) {
+  const birth = new Date(birthdate), now = new Date(toDate);
+  let years = now.getFullYear() - birth.getFullYear(), months = now.getMonth() - birth.getMonth(), days = now.getDate() - birth.getDate();
+  if (days < 0) { months--; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+  if (months < 0) { years--; months += 12; }
+  return { years, months, days };
+}
+function formatAge(age) {
+  if (age.years > 0) return `${age.years}岁${age.months > 0 ? age.months + '个月' : ''}`;
+  return `${age.months}个月${age.days > 0 ? age.days + '天' : ''}`;
+}
+function calcMonths(birthdate, toDate = new Date()) {
+  const age = calcAge(birthdate, toDate);
+  return age.years * 12 + age.months;
+}
+function calcDays(birthdate, toDate = new Date()) {
+  return Math.floor((new Date(toDate) - new Date(birthdate)) / (1000 * 60 * 60 * 24));
+}
+function formatDate(dateStr) { const d = new Date(dateStr); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; }
+function toast(msg) { 
+  const t = document.getElementById('toast'); 
+  if (!t) return;
+  t.textContent = msg; 
+  t.classList.add('show'); 
+  clearTimeout(t._timer); 
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000); 
+}
+
+function compressImage(file, maxSize = 1920, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxSize) { height = Math.round(height * maxSize / width); width = maxSize; }
+        else if (height > maxSize) { width = Math.round(width * maxSize / height); height = maxSize; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas to Blob failed'));
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+let currentTimelineFilter = 'all';
+let currentMetric = 'height';
+let growthChart = null;
+let currentMediaBlob = null; 
+let currentMediaType = 'image';
+let currentType = 'diary';
+let editingRecordId = null;
+
+function renderNav() {
+  const selector = document.getElementById('child-selector');
+  if (!DB.data) return;
+  selector.innerHTML = DB.data.children.map(c => `
+    <button class="child-tab ${c.id === DB.data.activeChildId ? 'active' : ''}" onclick="switchChild('${c.id}')">
+      <div class="avatar" style="width: 22px; height: 22px; font-size: 11px;">${c.nickname.charAt(0)}</div>
+      ${c.nickname}
+    </button>
+  `).join('');
+}
+
+function renderHero() {
+  const child = DB.getActiveChild();
+  if (!child) return;
+  const age = calcAge(child.birthdate);
+  const days = calcDays(child.birthdate);
+  document.getElementById('hero-child-card').innerHTML = `
+    <div class="flex items-center gap-4 mb-6">
+      <div class="avatar" style="width: 64px; height: 64px; font-size: 26px;">${child.nickname.charAt(0)}</div>
+      <div><div class="font-serif text-2xl font-semibold">${child.nickname}</div><div class="text-sm" style="color: var(--muted);">${formatAge(age)} · ${child.gender === 'M' ? '男孩' : '女孩'}</div></div>
+    </div>
+    <div class="border-t pt-6" style="border-color: var(--border-soft);">
+      <div class="text-xs font-semibold tracking-wider mb-2" style="color: var(--muted);">已陪伴</div>
+      <div class="flex items-baseline gap-2"><span class="big-number" style="font-size: 64px; color: var(--accent);">${days}</span><span class="text-lg" style="color: var(--muted);">天</span></div>
+    </div>
+    <div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t" style="border-color: var(--border-soft);">
+      <div><div class="text-xs font-semibold tracking-wider mb-1" style="color: var(--muted);">出生日期</div><div class="text-sm font-medium">${formatDate(child.birthdate)}</div></div>
+      <div><div class="text-xs font-semibold tracking-wider mb-1" style="color: var(--muted);">下一个里程碑</div><div class="text-sm font-medium" style="color: var(--accent);">${getNextMilestone()}</div></div>
+    </div>`;
+}
+
+function getNextMilestone() {
+  const next = DB.data.milestones.find(m => !m.achieved);
+  return next ? next.name : '已全部达成';
+}
+
+function renderStats() {
+  const child = DB.getActiveChild();
+  if (!child) return;
+  const records = DB.getRecords();
+  const measurements = DB.getMeasurements();
+  const lastM = measurements[measurements.length - 1];
+  const achieved = DB.data.milestones.filter(m => m.achieved).length;
+  const total = DB.data.milestones.length;
+  const days = calcDays(child.birthdate);
+
+  document.getElementById('stats-grid').innerHTML = [
+    { label: '陪伴天数', value: days, suffix: '' },
+    { label: '当前身高', value: lastM ? lastM.measurements.height : '--', suffix: lastM ? 'cm' : '' },
+    { label: '当前体重', value: lastM ? lastM.measurements.weight : '--', suffix: lastM ? 'kg' : '' },
+    { label: '里程碑', value: `${achieved}/${total}`, suffix: '' }
+  ].map(s => `
+    <div class="card p-5 md:p-6">
+      <div class="text-xs font-semibold tracking-wider mb-3" style="color: var(--muted);">${s.label}</div>
+      <div class="flex items-baseline gap-1">
+        <span class="big-number" style="font-size: 36px;">${s.value}</span>
+        ${s.suffix ? `<span class="text-sm" style="color: var(--muted);">${s.suffix}</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function getTypeBadge(type) {
+  const labels = { diary: '日记', milestone: '里程碑', measurement: '测量', photo: '照片' };
+  return `<span class="type-badge type-${type}">${labels[type] || '日记'}</span>`;
+}
+
+function renderTimeline() {
+  const records = DB.getRecords();
+  const filtered = currentTimelineFilter === 'all' ? records : records.filter(r => r.type === currentTimelineFilter);
+  const container = document.getElementById('timeline-container');
+  
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state"><p>还没有记录，点击"添加记录"开始书写成长故事</p></div>`;
+    return;
+  }
+  
+  let currentYear = null, html = '';
+  filtered.forEach(r => {
+    const year = new Date(r.date).getFullYear();
+    if (year !== currentYear) {
+      currentYear = year;
+      html += `<div class="year-divider"><span>${year}</span><div class="line"></div></div>`;
+    }
+    const d = new Date(r.date);
+    let contentHtml = '';
+    if (r.type === 'measurement' && r.measurements) {
+      contentHtml = `<div class="grid grid-cols-2 gap-3 mt-3">
+        <div class="p-3 rounded-lg" style="background: var(--bg-2);"><div class="text-xs" style="color: var(--muted);">身高</div><div class="font-serif text-xl font-semibold">${r.measurements.height}<span class="text-sm ml-1" style="color: var(--muted);">cm</span></div></div>
+        <div class="p-3 rounded-lg" style="background: var(--bg-2);"><div class="text-xs" style="color: var(--muted);">体重</div><div class="font-serif text-xl font-semibold">${r.measurements.weight}<span class="text-sm ml-1" style="color: var(--muted);">kg</span></div></div>
+      </div>`;
+    }
+    if (r.content) contentHtml += `<p class="text-sm leading-relaxed mt-3" style="color: var(--fg-soft);">${r.content}</p>`;
+    
+    if (r.mediaId) {
+      const safeTitle = r.title.replace(/'/g, "\\'");
+      if (r.mediaType === 'video') {
+        contentHtml += `<video data-media-id="${r.mediaId}" controls preload="metadata"></video>`;
+      } else {
+        contentHtml += `<img data-media-id="${r.mediaId}" onclick="viewMedia('${r.mediaId}', '${safeTitle}', 'image')" style="cursor: pointer;">`;
+      }
+    }
+    
+    html += `<div class="timeline-item">
+      <div class="timeline-marker">
+        <div class="month-day">${d.getMonth()+1}月${d.getDate()}日</div>
+        <div class="year">${year}</div>
+      </div>
+      <div class="timeline-dot ${r.type}"></div>
+      <div class="timeline-card">
+        <div class="action-btns">
+          <button class="action-btn edit-btn" data-id="${r.id}" title="编辑记录">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="action-btn delete-btn" data-id="${r.id}" title="删除记录">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+        <div class="flex items-center mb-2 gap-2" style="padding-right: 80px;">
+          <h3 class="font-serif text-lg font-semibold">${r.title}</h3>
+          ${getTypeBadge(r.type)}
+        </div>
+        ${contentHtml}
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+  loadMediaElements();
+}
+
+async function deleteRecord(id) {
+  if (confirm('确定要删除这条记录吗？相关的照片或视频也会从文件夹中清除。')) {
+    await DB.removeRecord(id);
+    renderAll();
+    toast('记录已删除');
+  }
+}
+
+function renderGrowthChart() {
+  const child = DB.getActiveChild();
+  if (!child) return;
+  const measurements = DB.getMeasurements();
+  const canvasEl = document.getElementById('growth-chart');
+  if (!canvasEl || typeof Chart === 'undefined') return;
+  const ctx = canvasEl.getContext('2d');
+  
+  if (growthChart) growthChart.destroy();
+  if (measurements.length === 0) return;
+  
+  const labels = measurements.map(m => calcMonths(child.birthdate, m.date) + '月');
+  const data = measurements.map(m => m.measurements[currentMetric]);
+  
+  growthChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{ label: currentMetric === 'height' ? '身高' : '体重', data, borderColor: '#D67D3E', backgroundColor: 'rgba(214,125,62,0.1)', borderWidth: 3, fill: true, tension: 0.35, pointBackgroundColor: '#FFFFFF', pointBorderColor: '#D67D3E', pointBorderWidth: 2.5, pointRadius: 5, pointHoverRadius: 7 }] },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+  
+  const last = measurements[measurements.length - 1];
+  document.getElementById('current-stats').innerHTML = `
+    <div class="text-xs font-semibold tracking-wider mb-3" style="color: var(--muted);">最近一次测量</div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><div class="text-xs" style="color: var(--muted);">身高</div><div class="font-serif text-2xl font-bold">${last.measurements.height}<span class="text-sm ml-1" style="color: var(--muted);">cm</span></div></div>
+      <div><div class="text-xs" style="color: var(--muted);">体重</div><div class="font-serif text-2xl font-bold">${last.measurements.weight}<span class="text-sm ml-1" style="color: var(--muted);">kg</span></div></div>
+    </div>
+    <div class="mt-3 pt-3 border-t text-xs" style="border-color: var(--border-soft); color: var(--muted);">${formatDate(last.date)}</div>`;
+  
+  if (measurements.length >= 2) {
+    const first = measurements[0], lastM = measurements[measurements.length - 1];
+    document.getElementById('growth-trend').innerHTML = `
+      <div class="text-xs font-semibold tracking-wider mb-3" style="color: var(--muted);">增长趋势</div>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span style="color: var(--muted);">身高增长</span><span class="font-semibold" style="color: var(--sage);">+${lastM.measurements.height - first.measurements.height} cm</span></div>
+        <div class="flex justify-between"><span style="color: var(--muted);">体重增长</span><span class="font-semibold" style="color: var(--sage);">+${lastM.measurements.weight - first.measurements.weight} kg</span></div>
+      </div>`;
+  }
+}
+
+function renderMilestones() {
+  const achieved = DB.data.milestones.filter(m => m.achieved).length;
+  const total = DB.data.milestones.length;
+  document.getElementById('milestone-progress').innerHTML = `
+    <div class="text-sm" style="color: var(--muted);">已完成</div>
+    <div class="font-serif text-3xl font-bold" style="color: var(--sage);">${achieved}<span class="text-lg" style="color: var(--muted);">/${total}</span></div>`;
+  
+  document.getElementById('milestones-grid').innerHTML = DB.data.milestones.map(m => `
+    <div class="milestone-card ${m.achieved ? 'achieved' : ''}">
+      <div class="milestone-icon">${m.icon}</div>
+      <div class="font-semibold text-sm mb-1">${m.name}</div>
+      <div class="text-xs" style="color: var(--muted);">${m.achieved && m.date ? formatDate(m.date) : m.defaultAge}</div>
+    </div>`).join('');
+}
+
+function renderGallery() {
+  const records = DB.getRecords().filter(r => r.mediaId);
+  const grid = document.getElementById('gallery-grid');
+  const empty = document.getElementById('gallery-empty');
+  
+  if (records.length === 0) {
+    grid.innerHTML = ''; empty.classList.remove('hidden'); return;
+  }
+  empty.classList.add('hidden');
+  grid.innerHTML = records.map(r => {
+    const safeTitle = r.title.replace(/'/g, "\\'");
+    if (r.mediaType === 'video') {
+      return `<div class="gallery-item" onclick="viewMedia('${r.mediaId}', '${safeTitle}', 'video')">
+        <video data-media-id="${r.mediaId}" preload="metadata"></video>
+        <div class="play-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </div>
+        <div class="overlay">
+          <div class="text-xs opacity-80">${formatDate(r.date)}</div>
+          <div class="font-medium text-sm">${r.title}</div>
+        </div>
+      </div>`;
+    } else {
+      return `<div class="gallery-item" onclick="viewMedia('${r.mediaId}', '${safeTitle}', 'image')">
+        <img data-media-id="${r.mediaId}" alt="${r.title}">
+        <div class="overlay">
+          <div class="text-xs opacity-80">${formatDate(r.date)}</div>
+          <div class="font-medium text-sm">${r.title}</div>
+        </div>
+      </div>`;
+    }
+  }).join('');
+  loadMediaElements();
+}
+
+function renderChildrenList() {
+  document.getElementById('children-list').innerHTML = DB.data.children.map(c => {
+    const age = calcAge(c.birthdate);
+    return `<div class="flex items-center gap-3 p-3 rounded-xl border" style="border-color: var(--border-soft);">
+      <div class="avatar" style="width: 40px; height: 40px; font-size: 16px;">${c.nickname.charAt(0)}</div>
+      <div class="flex-1"><div class="font-semibold">${c.nickname}</div><div class="text-xs" style="color: var(--muted);">${formatAge(age)}</div></div>
+      <button onclick="editChild('${c.id}')" class="btn-ghost text-xs">编辑</button>
+      <button onclick="deleteChild('${c.id}')" class="btn-ghost text-xs" style="color: #C77264;">删除</button>
+    </div>`;
+  }).join('');
+}
+
+function renderAll() {
+  if (!DB.data) return;
+  renderNav(); renderHero(); renderStats(); renderTimeline(); renderGrowthChart(); renderMilestones(); renderGallery();
+}
+
+function switchChild(id) { DB.data.activeChildId = id; DB.save(); renderAll(); }
+function switchTimelineFilter(filter) {
+  currentTimelineFilter = filter;
+  document.querySelectorAll('#timeline-filters .chip').forEach(c => c.classList.toggle('active', c.dataset.filter === filter));
+  renderTimeline();
+}
+function switchMetric(metric) {
+  currentMetric = metric;
+  document.querySelectorAll('[data-metric]').forEach(b => b.classList.toggle('active', b.dataset.metric === metric));
+  renderGrowthChart();
+}
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function openRecordModal(recordId = null) {
+  currentMediaBlob = null;
+  currentMediaType = 'image';
+  editingRecordId = recordId;
+  
+  const form = document.getElementById('record-form');
+  form.reset();
+  
+  const preview = document.getElementById('media-preview');
+  const placeholder = document.getElementById('upload-placeholder');
+  const area = document.getElementById('media-upload-area');
+  preview.innerHTML = '';
+  preview.classList.add('hidden');
+  placeholder.classList.remove('hidden');
+  area.classList.remove('has-image');
+
+  if (recordId) {
+    // 编辑模式
+    const record = DB.data.records.find(r => r.id === recordId);
+    if (!record) return;
+    
+    document.getElementById('record-modal-title').textContent = '编辑记录';
+    document.getElementById('submit-btn').textContent = '更新记录';
+    
+    form.elements['date'].value = record.date;
+    form.elements['title'].value = record.title;
+    form.elements['content'].value = record.content || '';
+    
+    if (record.measurements) {
+      form.elements['height'].value = record.measurements.height || '';
+      form.elements['weight'].value = record.measurements.weight || '';
+    }
+    
+    selectType(record.type);
+    if (record.type === 'milestone' && record.milestone) {
+      form.elements['milestone'].value = record.milestone;
+    }
+    
+    // 加载旧媒体预览
+    if (record.mediaId) {
+      getMediaUrl(record.mediaId).then(url => {
+        if (url) {
+          if (record.mediaType === 'video') {
+            preview.innerHTML = `<video src="${url}" controls style="width: 100%; max-height: 250px; border-radius: 12px;"></video>`;
+          } else {
+            preview.innerHTML = `<img src="${url}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px;">`;
+          }
+          preview.classList.remove('hidden');
+          placeholder.classList.add('hidden');
+          area.classList.add('has-image');
+        }
+      });
+    }
+  } else {
+    // 新增模式
+    document.getElementById('record-modal-title').textContent = '添加新记录';
+    document.getElementById('submit-btn').textContent = '保存记录';
+    document.getElementById('record-date').valueAsDate = new Date();
+    selectType('diary');
+  }
+  
+  openModal('modal-record');
+}
+
+function selectType(type) {
+  currentType = type;
+  document.querySelectorAll('.type-option').forEach(o => o.classList.toggle('active', o.dataset.type === type));
+  document.getElementById('milestone-select-wrap').classList.toggle('hidden', type !== 'milestone');
+  document.getElementById('measurement-fields').classList.toggle('hidden', type !== 'measurement');
+  document.getElementById('content-field').classList.toggle('hidden', type === 'measurement');
+  
+  if (type === 'milestone') {
+    const sel = document.getElementById('milestone-select');
+    sel.innerHTML = DB.data.milestones.map(m => `<option value="${m.id}">${m.icon} ${m.name} (${m.defaultAge})</option>`).join('');
+  }
+}
+
+function openSettings() { renderChildrenList(); openModal('modal-settings'); }
+
+function openChildModal(child = null) {
+  const form = document.getElementById('child-form');
+  form.reset();
+  if (child) {
+    document.getElementById('child-modal-title').textContent = '编辑孩子';
+    form.elements['rec_id'].value = child.id;
+    form.elements['nickname'].value = child.nickname;
+    form.elements['name'].value = child.name || '';
+    form.elements['birthdate'].value = child.birthdate;
+    form.elements['gender'].value = child.gender;
+  } else {
+    document.getElementById('child-modal-title').textContent = '添加孩子';
+    form.elements['rec_id'].value = '';
+  }
+  openModal('modal-child');
+}
+
+function editChild(id) { 
+  const c = DB.data.children.find(c => c.id === id); 
+  openChildModal(c); 
+}
+
+async function deleteChild(id) {
+  if (confirm('确定删除这个孩子档案吗？相关记录也会被删除。')) {
+    if (await DB.removeChild(id)) { renderChildrenList(); renderAll(); toast('已删除'); }
+    else toast('至少保留一个孩子档案');
+  }
+}
+
+async function viewMedia(mediaId, caption, type = 'image') {
+  const container = document.getElementById('viewer-container');
+  const closeBtn = `<button onclick="closeModal('modal-image-viewer')" class="absolute -top-12 right-0 text-white p-2 hover:opacity-70 transition">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>`;
+  
+  const url = await getMediaUrl(mediaId);
+  if (!url) { toast("无法加载媒体文件"); return; }
+  
+  if (type === 'video') {
+    container.innerHTML = `${closeBtn}
+      <video src="${url}" controls autoplay class="w-full rounded-2xl max-h-[80vh]"></video>
+      <div class="text-white mt-4 text-center">${caption || ''}</div>`;
+  } else {
+    container.innerHTML = `${closeBtn}
+      <img src="${url}" class="w-full rounded-2xl max-h-[80vh] object-contain">
+      <div class="text-white mt-4 text-center">${caption || ''}</div>`;
+  }
+  openModal('modal-image-viewer');
+}
+
+async function changeFolder() {
+  const connected = await FSAdapter.connectNewFolder();
+  if (connected) {
+    const hasPerm = await FSAdapter.verifyPermission();
+    if (hasPerm) {
+      await FSAdapter.setupDirs();
+      await DB.load();
+      renderAll();
+      closeModal('modal-settings');
+      toast('已切换到新的文件夹');
+    }
+  }
+}
+
+async function handleRecordSubmit(e) {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const recordData = {
+    type: currentType,
+    date: formData.get('date'),
+    title: formData.get('title'),
+    content: formData.get('content') || ''
+  };
+  if (currentType === 'milestone') recordData.milestone = formData.get('milestone');
+  if (currentType === 'measurement') {
+    recordData.measurements = {
+      height: parseFloat(formData.get('height')) || null,
+      weight: parseFloat(formData.get('weight')) || null
+    };
+  }
+  
+  const oldRecord = editingRecordId ? DB.data.records.find(r => r.id === editingRecordId) : null;
+  const oldMediaId = oldRecord ? oldRecord.mediaId : null;
+
+  // 如果有新上传的媒体文件
+  if (currentMediaBlob) {
+    try {
+      const ext = currentMediaType === 'video' ? 'mp4' : 'jpg';
+      let blobToSave = currentMediaBlob;
+      if (currentMediaType === 'image') {
+        blobToSave = await compressImage(currentMediaBlob, 1920, 0.85);
+      }
+      const fileName = await FSAdapter.saveMedia(blobToSave, ext);
+      recordData.mediaId = fileName;
+      recordData.mediaType = currentMediaType;
+    } catch (err) {
+      toast("媒体文件保存失败：" + err.message);
+      return;
+    }
+  } else {
+    // 没有新上传，保留原有的
+    if (oldRecord && oldRecord.mediaId) {
+      recordData.mediaId = oldRecord.mediaId;
+      recordData.mediaType = oldRecord.mediaType;
+    }
+  }
+  
+  if (editingRecordId) {
+    await DB.updateRecord(editingRecordId, recordData, oldMediaId);
+    toast('记录已更新');
+  } else {
+    await DB.addRecord(recordData);
+    toast('记录已保存');
+  }
+  
+  closeModal('modal-record');
+  editingRecordId = null;
+  renderAll();
+}
+
+function handleChildSubmit(e) {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const data = {
+    nickname: formData.get('nickname'),
+    name: formData.get('name'),
+    birthdate: formData.get('birthdate'),
+    gender: formData.get('gender')
+  };
+  const id = formData.get('rec_id');
+  if (id) { 
+    DB.updateChild(id, data); 
+    toast('已更新孩子档案'); 
+  } else { 
+    DB.addChild(data); 
+    toast('已添加孩子档案'); 
+  }
+  closeModal('modal-child');
+  renderChildrenList();
+  renderAll();
+}
+
+async function connectAndStart() {
+  const connected = await FSAdapter.connectNewFolder();
+  if (connected) {
+    const hasPerm = await FSAdapter.verifyPermission();
+    if (hasPerm) {
+      await FSAdapter.setupDirs();
+      await DB.load();
+      renderAll();
+      document.getElementById('welcome-screen').classList.remove('active');
+    } else {
+      toast("需要授权文件夹读写权限");
+    }
+  }
+}
+
+async function grantPermission() {
+  const hasPerm = await FSAdapter.verifyPermission();
+  if (hasPerm) {
+    await FSAdapter.setupDirs();
+    await DB.load();
+    renderAll();
+    document.getElementById('permission-banner').style.display = 'none';
+  }
+}
+
+function exportData() {
+  if (!DB.data) return;
+  const data = JSON.stringify(DB.data, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `成长志-文字备份-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('文字数据已下载备份');
+}
+
+async function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const importedData = JSON.parse(text);
+    if (!importedData || !Array.isArray(importedData.records)) {
+      toast("文件格式不正确");
+      return;
+    }
+    if (importedData.children) {
+      importedData.children.forEach(c => {
+        if (!DB.data.children.find(existing => existing.id === c.id)) {
+          DB.data.children.push(c);
+        }
+      });
+    }
+    let addedCount = 0;
+    importedData.records.forEach(r => {
+      if (!DB.data.records.find(existing => existing.id === r.id)) {
+        if (r.mediaId && r.mediaId.startsWith('data:image')) {
+          r.mediaId = null;
+        }
+        DB.data.records.push(r);
+        addedCount++;
+      }
+    });
+    await DB.save();
+    renderAll();
+    closeModal('modal-settings');
+    toast(`成功导入 ${addedCount} 条文字记录！`);
+  } catch (err) {
+    toast("导入失败：" + err.message);
+  }
+}
+
+async function scanAndImportMedia() {
+  toast("正在扫描根目录...");
+  try {
+    let importedCount = 0;
+    for await (const entry of FSAdapter.rootDir.values()) {
+      if (entry.kind === 'file') {
+        const file = await entry.getFile();
+        const fileName = file.name.toLowerCase();
+        const isMedia = fileName.match(/\.(jpg|jpeg|png|gif|mp4|mov|avi|webm)$/);
+        if (entry.name === 'db.json' || !isMedia) continue;
+        const newMediaId = await FSAdapter.moveMediaToFolder(entry);
+        const isVideo = fileName.match(/\.(mp4|mov|avi|webm)$/);
+        const record = {
+          id: 'r' + Date.now() + Math.random().toString(36).substr(2, 5),
+          childId: DB.data.activeChildId,
+          type: 'photo',
+          date: new Date(file.lastModified).toISOString().slice(0, 10),
+          title: entry.name.replace(/\.[^/.]+$/, ""),
+          content: '从旧文件夹自动导入',
+          mediaId: newMediaId,
+          mediaType: isVideo ? 'video' : 'image'
+        };
+        DB.data.records.push(record);
+        importedCount++;
+      }
+    }
+    if (importedCount > 0) {
+      await DB.save();
+      renderAll();
+      toast(`成功扫描并导入了 ${importedCount} 个媒体文件！`);
+    } else {
+      toast("未在根目录发现可导入的散落媒体文件。");
+    }
+    closeModal('modal-settings');
+  } catch (err) {
+    toast("扫描导入失败：" + err.message);
+  }
+}
+
+async function initApp() {
+  try {
+    if (!window.showDirectoryPicker) {
+      document.getElementById('unsupported-banner').style.display = 'flex';
+      return;
+    }
+    const hasSavedHandle = await FSAdapter.init();
+    if (hasSavedHandle) {
+      const perm = await FSAdapter.rootDir.queryPermission({ mode: 'readwrite' });
+      if (perm === 'granted') {
+        await FSAdapter.verifyPermission();
+        await FSAdapter.setupDirs();
+        await DB.load();
+        renderAll();
+      } else {
+        document.getElementById('permission-banner').style.display = 'block';
+      }
+    } else {
+      document.getElementById('welcome-screen').classList.add('active');
+    }
+    
+    const timelineContainer = document.getElementById('timeline-container');
+    if (timelineContainer) {
+      timelineContainer.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.edit-btn');
+        const deleteBtn = e.target.closest('.delete-btn');
+        if (editBtn) {
+          e.stopPropagation();
+          openRecordModal(editBtn.dataset.id);
+        } else if (deleteBtn) {
+          e.stopPropagation();
+          await deleteRecord(deleteBtn.dataset.id);
+        }
+      });
+    }
+
+    document.querySelectorAll('#timeline-filters .chip').forEach(chip => {
+      chip.addEventListener('click', () => switchTimelineFilter(chip.dataset.filter));
+    });
+    
+    const mediaInput = document.getElementById('media-input');
+    if (mediaInput) {
+      mediaInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          currentMediaBlob = file;
+          const preview = document.getElementById('media-preview');
+          const placeholder = document.getElementById('upload-placeholder');
+          const area = document.getElementById('media-upload-area');
+          if (file.type.startsWith('image/')) {
+            currentMediaType = 'image';
+            const url = URL.createObjectURL(file);
+            preview.innerHTML = `<img src="${url}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px;">`;
+          } else if (file.type.startsWith('video/')) {
+            currentMediaType = 'video';
+            const url = URL.createObjectURL(file);
+            preview.innerHTML = `<video src="${url}" controls style="width: 100%; max-height: 250px; border-radius: 12px;"></video>`;
+          } else {
+            toast('不支持的文件类型');
+            return;
+          }
+          preview.classList.remove('hidden');
+          placeholder.classList.add('hidden');
+          area.classList.add('has-image');
+        } catch (err) { 
+          toast('文件处理失败'); 
+        }
+      });
+    }
+    
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    } else {
+      document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+    }
+    
+  } catch (err) {
+    console.error("初始化错误:", err);
+    document.body.innerHTML = `<div style="text-align:center;padding:50px;">应用初始化失败，请检查网络或更换 Chrome 浏览器重试。<br><span style="font-size:12px;color:#999;">错误信息: ${err.message}</span></div>`;
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+</script>
+</body>
+</html>
