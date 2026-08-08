@@ -634,7 +634,6 @@ const DB = {
     if (idx !== -1) {
       const oldRecord = this.data.records[idx];
       
-      // 处理里程碑状态更替
       if (oldRecord.type === 'milestone' && oldRecord.milestone && (oldRecord.milestone !== updatedData.milestone || updatedData.type !== 'milestone')) {
         const m = this.data.milestones.find(m => m.id === oldRecord.milestone);
         if (m) { m.achieved = false; m.date = null; }
@@ -644,12 +643,10 @@ const DB = {
         if (m) { m.achieved = true; m.date = updatedData.date; }
       }
 
-      // 如果有新上传的媒体，删除旧媒体
       if (updatedData.mediaId !== oldMediaId && oldMediaId) {
         await FSAdapter.deleteMedia(oldMediaId);
       }
 
-      // 保留 childId 和 id，更新其他字段
       this.data.records[idx] = { ...oldRecord, ...updatedData };
       await this.save();
     }
@@ -670,7 +667,7 @@ const DB = {
     return this.data.records.filter(r => r.childId === cid).sort((a, b) => new Date(b.date) - new Date(a.date));
   },
   getMeasurements(childId = null) {
-    return this.data.records(childId).filter(r => r.type === 'measurement' && r.measurements).sort((a, b) => new Date(a.date) - new Date(b.date));
+    return this.getRecords(childId).filter(r => r.type === 'measurement' && r.measurements).sort((a, b) => new Date(a.date) - new Date(b.date));
   }
 };
 
@@ -1010,7 +1007,6 @@ function openRecordModal(recordId = null) {
   area.classList.remove('has-image');
 
   if (recordId) {
-    // 编辑模式
     const record = DB.data.records.find(r => r.id === recordId);
     if (!record) return;
     
@@ -1031,7 +1027,6 @@ function openRecordModal(recordId = null) {
       form.elements['milestone'].value = record.milestone;
     }
     
-    // 加载旧媒体预览
     if (record.mediaId) {
       getMediaUrl(record.mediaId).then(url => {
         if (url) {
@@ -1047,7 +1042,6 @@ function openRecordModal(recordId = null) {
       });
     }
   } else {
-    // 新增模式
     document.getElementById('record-modal-title').textContent = '添加新记录';
     document.getElementById('submit-btn').textContent = '保存记录';
     document.getElementById('record-date').valueAsDate = new Date();
@@ -1156,7 +1150,6 @@ async function handleRecordSubmit(e) {
   const oldRecord = editingRecordId ? DB.data.records.find(r => r.id === editingRecordId) : null;
   const oldMediaId = oldRecord ? oldRecord.mediaId : null;
 
-  // 如果有新上传的媒体文件
   if (currentMediaBlob) {
     try {
       const ext = currentMediaType === 'video' ? 'mp4' : 'jpg';
@@ -1172,7 +1165,6 @@ async function handleRecordSubmit(e) {
       return;
     }
   } else {
-    // 没有新上传，保留原有的
     if (oldRecord && oldRecord.mediaId) {
       recordData.mediaId = oldRecord.mediaId;
       recordData.mediaType = oldRecord.mediaType;
