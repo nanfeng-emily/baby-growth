@@ -85,6 +85,82 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 .gallery-item .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(45,42,38,0.9), rgba(45,42,38,0.2) 50%, transparent 80%); opacity: 0; transition: opacity 0.3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 14px; color: white; pointer-events: none; }
 .gallery-item:hover .overlay { opacity: 1; }
 .gallery-item .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.gallery-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.photo-picker-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .photo-picker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.photo-pick-card { position: relative; border: 2px solid transparent; border-radius: 12px; overflow: hidden; background: var(--bg-2); cursor: pointer; padding: 0; min-height: 120px; transition: all 0.2s; }
+.photo-pick-card img, .photo-pick-card video { width: 100%; height: 130px; object-fit: cover; display: block; }
+.photo-pick-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(214,125,62,0.15); }
+.photo-pick-card .pick-check { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.9); color: var(--muted); display: flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+.photo-pick-card.selected .pick-check { background: var(--accent); color: white; }
+.photo-pick-card .pick-meta { padding: 9px 10px; font-size: 11px; color: var(--muted); text-align: left; }
+.project-type-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.project-type { border: 1px solid var(--border); border-radius: 12px; background: var(--card); padding: 14px 10px; text-align: center; cursor: pointer; color: var(--muted); }
+.project-type.active { background: var(--fg); border-color: var(--fg); color: white; }
+.project-template-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.project-template { border: 1px solid var(--border); border-radius: 12px; background: var(--card); padding: 13px; text-align: left; cursor: pointer; color: var(--muted); min-height: 82px; }
+.project-template strong { color: var(--fg); }
+.project-template.active { border-color: var(--accent); background: rgba(214,125,62,0.08); box-shadow: 0 0 0 2px rgba(214,125,62,0.12); }
+@media (max-width: 640px) { .project-type-grid, .project-template-grid { grid-template-columns: 1fr; } }
+.project-preview { margin-top: 20px; background: #dedbd5; padding: 18px; border-radius: 14px; }
+.print-page { width: 100%; min-height: 720px; margin: 0 auto 18px; padding: 36px; background: white; color: #2D2A26; box-shadow: 0 8px 24px rgba(0,0,0,0.12); page-break-after: always; break-after: page; display: flex; flex-direction: column; }
+.print-page:last-child { page-break-after: auto; break-after: auto; }
+.print-photo { width: 100%; flex: 1; min-height: 0; object-fit: cover; border-radius: 8px; }
+.calendar-photo { height: 360px; width: 100%; object-fit: cover; border-radius: 10px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid #d8d1c8; border-left: 1px solid #d8d1c8; margin-top: 20px; }
+.calendar-grid span { min-height: 34px; padding: 7px; border-right: 1px solid #d8d1c8; border-bottom: 1px solid #d8d1c8; font-size: 12px; }
+.calendar-grid .weekday { min-height: auto; font-weight: 700; background: #f7f2eb; }
+.calendar-minimal { padding: 48px; }
+.calendar-minimal .calendar-photo { height: 430px; border-radius: 0; }
+.calendar-minimal .calendar-grid { margin-top: 28px; }
+.calendar-color { border-top: 18px solid var(--template-accent); }
+.calendar-color .calendar-photo { height: 330px; border-radius: 24px 4px 24px 4px; }
+.calendar-color .calendar-grid .weekday { background: var(--template-soft); color: var(--template-accent); }
+.frame-mat { flex: 1; border: 22px solid #f0e7da; outline: 2px solid #2D2A26; padding: 16px; display: flex; min-height: 0; }
+.frame-polaroid { padding: 54px; background: #eee8df; }
+.frame-polaroid-card { flex: 1; background: white; padding: 20px 20px 74px; transform: rotate(-1deg); box-shadow: 0 12px 28px rgba(0,0,0,0.16); display: flex; flex-direction: column; min-height: 0; }
+.frame-poster { position: relative; padding: 0; overflow: hidden; }
+.frame-poster .print-photo { border-radius: 0; position: absolute; inset: 0; width: 100%; height: 100%; }
+.frame-poster-copy { position: absolute; left: 0; right: 0; bottom: 0; padding: 58px 40px 36px; color: white; background: linear-gradient(transparent, rgba(25,22,20,0.88)); }
+.book-cover { justify-content: center; align-items: center; text-align: center; background: #F6EDE3; }
+.book-copy { margin-top: 22px; line-height: 1.75; white-space: pre-wrap; }
+.book-magazine { padding: 0; display: grid; grid-template-rows: 62% 38%; overflow: hidden; }
+.book-magazine .print-photo { border-radius: 0; width: 100%; height: 100%; }
+.book-magazine-copy { padding: 30px 38px; display: flex; flex-direction: column; justify-content: center; }
+.book-mosaic { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-height: 0; }
+.book-mosaic figure { margin: 0; display: flex; flex-direction: column; min-height: 0; }
+.book-mosaic img { width: 100%; flex: 1; min-height: 0; object-fit: cover; border-radius: 8px; }
+.book-mosaic figcaption { font-size: 12px; color: #786f65; margin-top: 8px; }
+.book-composer { border-top: 1px solid var(--border-soft); padding-top: 20px; }
+.book-page-card { border: 1px solid var(--border); border-radius: 14px; background: var(--card); padding: 16px; }
+.book-page-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.layout-choice-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.layout-choice { border: 1px solid var(--border); background: var(--bg-2); color: var(--muted); border-radius: 8px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
+.layout-choice.active { background: var(--accent); color: white; border-color: var(--accent); }
+.book-photo-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.book-photo-slot { background: var(--bg-2); border-radius: 10px; padding: 10px; }
+.book-photo-slot label { font-size: 11px; }
+.book-page-actions { display: flex; gap: 6px; }
+.book-page-actions button { border: 0; background: var(--bg-2); color: var(--muted); border-radius: 7px; padding: 6px 9px; cursor: pointer; font-size: 12px; }
+.book-layout-grid { flex: 1; display: grid; gap: 12px; min-height: 0; }
+.book-layout-grid.layout-1 { grid-template-columns: 1fr; }
+.book-layout-grid.layout-2 { grid-template-columns: 1fr 1fr; }
+.book-layout-grid.layout-3 { grid-template-columns: 1.35fr 1fr; grid-template-rows: 1fr 1fr; }
+.book-layout-grid.layout-3 figure:first-child { grid-row: 1 / span 2; }
+.book-layout-grid.layout-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.book-layout-grid figure { min-height: 0; margin: 0; display: flex; flex-direction: column; }
+.book-layout-grid img { width: 100%; flex: 1; min-height: 0; object-fit: cover; border-radius: 8px; }
+.book-layout-grid figcaption { margin-top: 7px; font-size: 11px; color: #786f65; }
+.book-page-magazine { background: #fff; }
+.book-page-magazine .book-layout-grid { padding: 16px 0 0; border-top: 6px solid #2D2A26; }
+.book-page-mosaic { background: #F2F5EE; }
+@media print {
+  @page { size: A4 portrait; margin: 8mm; }
+  body * { visibility: hidden !important; }
+  #project-preview, #project-preview * { visibility: visible !important; }
+  #project-preview { position: absolute; inset: 0; width: 100%; margin: 0; padding: 0; background: white; }
+  .print-page { width: 100%; min-height: 270mm; margin: 0; padding: 12mm; box-shadow: none; }
+}
 .text-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -187,12 +263,19 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
   
   <section id="gallery-section" class="py-20 md:py-28" style="background: var(--bg-2);">
     <div class="max-w-7xl mx-auto px-6">
-      <div class="mb-12 reveal">
-        <div class="text-sm font-semibold tracking-wider mb-3" style="color: var(--yellow);">— 照片墙</div>
-        <h2 class="section-title">用画面留住时光</h2>
+      <div class="mb-12 reveal flex flex-col md:flex-row md:items-end justify-between gap-5">
+        <div>
+          <div class="text-sm font-semibold tracking-wider mb-3" style="color: var(--yellow);">— 照片墙</div>
+          <h2 class="section-title">用画面留住时光</h2>
+          <p class="mt-3 text-sm" style="color: var(--muted);">只展示你亲自选中的珍贵画面。</p>
+        </div>
+        <div class="gallery-actions">
+          <button class="btn-secondary" onclick="openGalleryManager()">管理照片墙</button>
+          <button class="btn-primary" onclick="openPhotoProjectModal()">制作照片作品</button>
+        </div>
       </div>
       <div id="gallery-grid" class="gallery-grid reveal"></div>
-      <div id="gallery-empty" class="empty-state hidden"><p>还没有照片记录</p></div>
+      <div id="gallery-empty" class="empty-state hidden"><p>还没有精选照片，点击“管理照片墙”开始选择</p></div>
     </div>
   </section>
   
@@ -299,6 +382,10 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
           <div id="media-preview" class="hidden"></div>
         </div>
       </div>
+      <label class="flex items-start gap-3 p-4 rounded-xl" style="background: var(--bg-2); cursor: pointer;">
+        <input type="checkbox" name="showInGallery" style="width:18px;height:18px;margin-top:2px;accent-color:var(--accent);">
+        <span><span class="block font-semibold text-sm" style="color: var(--fg);">展示在照片墙</span><span class="block text-xs mt-1" style="color: var(--muted);">只有勾选的记录会出现在首页照片墙，也可以之后统一管理。</span></span>
+      </label>
       <div class="flex gap-3 pt-2">
         <button type="button" onclick="closeModal('modal-record')" class="btn-secondary flex-1 justify-center">取消</button>
         <button type="submit" class="btn-primary flex-1 justify-center" id="submit-btn">保存记录</button>
@@ -387,6 +474,67 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
         <button type="submit" class="btn-primary flex-1 justify-center">保存</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div id="modal-gallery-manager" class="modal-overlay">
+  <div class="modal-content" style="max-width: 860px;">
+    <div class="p-6 border-b flex items-center justify-between" style="border-color: var(--border-soft);">
+      <div><h3 class="font-serif text-2xl font-semibold">管理照片墙</h3><p class="text-xs mt-1" style="color:var(--muted);">点选想展示的照片或视频，再保存选择。</p></div>
+      <button type="button" onclick="closeModal('modal-gallery-manager')" class="btn-ghost p-2" aria-label="关闭">×</button>
+    </div>
+    <div class="p-6">
+      <div id="gallery-manager-grid" class="photo-picker-grid"></div>
+      <div id="gallery-manager-empty" class="empty-state hidden"><p>还没有带照片或视频的记录</p></div>
+      <div class="flex items-center justify-between gap-3 mt-6 pt-5 border-t" style="border-color:var(--border-soft);">
+        <span id="gallery-selection-count" class="text-sm" style="color:var(--muted);"></span>
+        <div class="flex gap-3"><button class="btn-secondary" onclick="closeModal('modal-gallery-manager')">取消</button><button class="btn-primary" onclick="saveGallerySelection()">保存选择</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-photo-project" class="modal-overlay">
+  <div class="modal-content" style="max-width: 1000px;">
+    <div class="p-6 border-b flex items-center justify-between" style="border-color: var(--border-soft);">
+      <div><h3 class="font-serif text-2xl font-semibold">制作照片作品</h3><p class="text-xs mt-1" style="color:var(--muted);">选择照片和版式，生成后可打印或保存为 PDF。</p></div>
+      <button type="button" onclick="closeModal('modal-photo-project')" class="btn-ghost p-2" aria-label="关闭">×</button>
+    </div>
+    <div class="p-6 space-y-6">
+      <div>
+        <label>选择作品类型</label>
+        <div class="project-type-grid">
+          <button type="button" class="project-type active" data-project-type="calendar" onclick="selectProjectType('calendar')"><strong class="block">成长台历</strong><span class="text-xs">12个月桌面月历</span></button>
+          <button type="button" class="project-type" data-project-type="frame" onclick="selectProjectType('frame')"><strong class="block">纪念相框</strong><span class="text-xs">一张照片一页</span></button>
+          <button type="button" class="project-type" data-project-type="book" onclick="selectProjectType('book')"><strong class="block">成长书</strong><span class="text-xs">照片、日期与故事</span></button>
+        </div>
+      </div>
+      <div>
+        <label>选择版式风格</label>
+        <div id="project-template-grid" class="project-template-grid"></div>
+        <p id="project-template-description" class="text-xs mt-2" style="color:var(--muted);"></p>
+      </div>
+      <div id="calendar-year-field"><label>台历年份</label><input id="project-year" type="number" min="2000" max="2100"></div>
+      <div>
+        <div class="flex items-center justify-between mb-3"><label style="margin:0;">选择照片</label><span id="project-selection-count" class="text-xs" style="color:var(--muted);"></span></div>
+        <div id="project-photo-grid" class="photo-picker-grid"></div>
+        <div id="project-photo-empty" class="empty-state hidden"><p>还没有可制作的照片记录</p></div>
+      </div>
+      <div id="book-page-composer" class="book-composer hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+          <div><label style="margin:0;">逐页编排成长书</label><p class="text-xs mt-1" style="color:var(--muted);">每页可独立选择单图、双拼、三拼或四拼，并指定照片。</p></div>
+          <div class="flex flex-wrap gap-2"><button type="button" class="btn-secondary" onclick="addBookPage()">+ 新增一页</button><button type="button" class="btn-secondary" onclick="autoArrangeBookPages()">自动一图一页</button><button type="button" class="btn-ghost" onclick="clearBookPages()">清空重排</button></div>
+        </div>
+        <div id="book-page-list" class="space-y-3"></div>
+        <div id="book-page-empty" class="empty-state hidden" style="padding:30px 20px;"><p>还没有内页，点击“新增一页”开始编排</p></div>
+      </div>
+      <div class="flex flex-wrap justify-end gap-3 pt-5 border-t" style="border-color:var(--border-soft);">
+        <button class="btn-secondary" onclick="closeModal('modal-photo-project')">取消</button>
+        <button id="build-project-btn" class="btn-primary" onclick="buildPhotoProject()">生成打印预览</button>
+        <button id="print-project-btn" class="btn-primary hidden" onclick="printPhotoProject()">打印 / 保存 PDF</button>
+      </div>
+      <div id="project-preview" class="project-preview hidden"></div>
+    </div>
   </div>
 </div>
 
@@ -490,6 +638,25 @@ function toast(msg) { const t = document.getElementById('toast'); if (!t) return
 function compressImage(file, maxSize = 1920, quality = 0.85) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { let { width, height } = img; if (width > height && width > maxSize) { height = Math.round(height * maxSize / width); width = maxSize; } else if (height > maxSize) { width = Math.round(width * maxSize / height); height = maxSize; } const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); canvas.toBlob(b => b ? resolve(b) : reject(new Error('Failed')), 'image/jpeg', quality); }; img.onerror = reject; img.src = e.target.result; }; reader.onerror = reject; reader.readAsDataURL(file); }); }
 
 let currentTimelineFilter = 'all', currentMetric = 'height', growthChart = null, currentMediaBlob = null, currentMediaType = 'image', currentType = 'diary', editingRecordId = null, currentMilestoneMediaBlob = null, editingMilestoneId = null;
+let galleryDraftSelection = new Set(), projectSelection = new Set(), currentProjectType = 'calendar', currentProjectTemplate = 'calendar-warm';
+let bookPages = [], bookPageSerial = 0;
+const PROJECT_TEMPLATES = {
+  calendar: [
+    { id: 'calendar-warm', name: '暖阳经典', note: '上方照片、下方月历，温暖耐看。' },
+    { id: 'calendar-minimal', name: '极简留白', note: '大幅照片与克制字体，适合风景和肖像。' },
+    { id: 'calendar-color', name: '缤纷月份', note: '每个月使用不同柔和彩色主题。' }
+  ],
+  frame: [
+    { id: 'frame-museum', name: '博物馆卡纸', note: '经典卡纸边框，适合正式纪念照。' },
+    { id: 'frame-polaroid', name: '拍立得手记', note: '宽留白与手写感日期，轻松生活化。' },
+    { id: 'frame-poster', name: '满版海报', note: '照片铺满整页，日期叠加在底部。' }
+  ],
+  book: [
+    { id: 'book-story', name: '温柔故事', note: '一张照片配一段完整成长故事。' },
+    { id: 'book-magazine', name: '成长杂志', note: '大图与醒目标题，现代杂志排版。' },
+    { id: 'book-mosaic', name: '双页拼贴', note: '每页组合两张照片，适合照片较多时使用。' }
+  ]
+};
 
 function renderNav() { const s = document.getElementById('child-selector'); if (!DB.data) return; s.innerHTML = DB.data.children.map(c => `<button class="child-tab ${c.id === DB.data.activeChildId ? 'active' : ''}" onclick="switchChild(${inlineArg(c.id)})"><div class="avatar" style="width: 22px; height: 22px; font-size: 11px;">${escapeHtml(c.nickname.charAt(0))}</div>${escapeHtml(c.nickname)}</button>`).join(''); }
 function renderHero() { const c = DB.getActiveChild(); if (!c) return; const a = calcAge(c.birthdate), d = calcDays(c.birthdate); document.getElementById('hero-child-card').innerHTML = `<div class="flex items-center gap-4 mb-6"><div class="avatar" style="width: 64px; height: 64px; font-size: 26px;">${escapeHtml(c.nickname.charAt(0))}</div><div><div class="font-serif text-2xl font-semibold">${escapeHtml(c.nickname)}</div><div class="text-sm" style="color: var(--muted);">${escapeHtml(formatAge(a))} · ${c.gender === 'M' ? '男孩' : '女孩'}</div></div></div><div class="border-t pt-6" style="border-color: var(--border-soft);"><div class="text-xs font-semibold tracking-wider mb-2" style="color: var(--muted);">已陪伴</div><div class="flex items-baseline gap-2"><span class="big-number" style="font-size: 64px; color: var(--accent);">${Number.isFinite(d) ? d : '--'}</span><span class="text-lg" style="color: var(--muted);">天</span></div></div><div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t" style="border-color: var(--border-soft);"><div><div class="text-xs font-semibold tracking-wider mb-1" style="color: var(--muted);">出生日期</div><div class="text-sm font-medium">${escapeHtml(formatDate(c.birthdate))}</div></div></div>`; }
@@ -579,7 +746,7 @@ async function deleteMilestoneConfirm(id) {
 }
 
 function renderGallery() {
-  const records = DB.getRecords().filter(r => r.mediaId);
+  const records = DB.getRecords().filter(r => r.mediaId && r.showInGallery !== false);
   const grid = document.getElementById('gallery-grid'); const empty = document.getElementById('gallery-empty');
   if (records.length === 0) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
@@ -592,7 +759,6 @@ function renderGallery() {
         <div class="play-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>
         <div class="overlay">
           <div class="text-xs opacity-80">${formatDate(r.date)}</div>
-          <div class="font-medium text-sm">${escapeHtml(r.title)}</div>
           ${contentHtml}
         </div>
       </div>`;
@@ -601,13 +767,276 @@ function renderGallery() {
       <img data-media-id="${escapeHtml(r.mediaId)}" alt="${escapeHtml(r.title)}">
       <div class="overlay">
         <div class="text-xs opacity-80">${formatDate(r.date)}</div>
-        <div class="font-medium text-sm">${escapeHtml(r.title)}</div>
         ${contentHtml}
       </div>
     </div>`;
   }).join('');
   loadMediaElements();
 }
+
+function mediaPickerCard(record, selected, toggleFunction) {
+  const media = record.mediaType === 'video'
+    ? `<video data-media-id="${escapeHtml(record.mediaId)}" muted preload="metadata"></video>`
+    : `<img data-media-id="${escapeHtml(record.mediaId)}" alt="${escapeHtml(record.title || '成长照片')}">`;
+  return `<button type="button" class="photo-pick-card ${selected ? 'selected' : ''}" onclick="${toggleFunction}(${inlineArg(record.id)})" aria-pressed="${selected}">
+    ${media}<span class="pick-check">${selected ? '✓' : '+'}</span>
+    <span class="pick-meta">${escapeHtml(formatDate(record.date))}</span>
+  </button>`;
+}
+
+async function openGalleryManager() {
+  if (!FSAdapter.isAvailable && !(await connectAndStart())) return;
+  const records = DB.getRecords().filter(r => r.mediaId);
+  galleryDraftSelection = new Set(records.filter(r => r.showInGallery !== false).map(r => r.id));
+  renderGalleryManager();
+  openModal('modal-gallery-manager');
+}
+
+function renderGalleryManager() {
+  const records = DB.getRecords().filter(r => r.mediaId);
+  const grid = document.getElementById('gallery-manager-grid');
+  const empty = document.getElementById('gallery-manager-empty');
+  grid.innerHTML = records.map(r => mediaPickerCard(r, galleryDraftSelection.has(r.id), 'toggleGallerySelection')).join('');
+  empty.classList.toggle('hidden', records.length > 0);
+  document.getElementById('gallery-selection-count').textContent = `已选择 ${galleryDraftSelection.size} 个画面`;
+  loadMediaElements();
+}
+
+function toggleGallerySelection(id) {
+  if (galleryDraftSelection.has(id)) galleryDraftSelection.delete(id); else galleryDraftSelection.add(id);
+  renderGalleryManager();
+}
+
+async function saveGallerySelection() {
+  DB.getRecords().filter(r => r.mediaId).forEach(r => { r.showInGallery = galleryDraftSelection.has(r.id); });
+  await DB.save();
+  renderGallery();
+  closeModal('modal-gallery-manager');
+  toast(`照片墙已更新，共展示 ${galleryDraftSelection.size} 个画面`);
+}
+
+function getPrintablePhotoRecords() {
+  return DB.getRecords().filter(r => r.mediaId && r.mediaType !== 'video');
+}
+
+function renderProjectPhotoPicker() {
+  const records = getPrintablePhotoRecords();
+  const grid = document.getElementById('project-photo-grid');
+  const empty = document.getElementById('project-photo-empty');
+  grid.innerHTML = records.map(r => mediaPickerCard(r, projectSelection.has(r.id), 'toggleProjectPhoto')).join('');
+  empty.classList.toggle('hidden', records.length > 0);
+  document.getElementById('project-selection-count').textContent = `已选择 ${projectSelection.size} 张`;
+  loadMediaElements();
+}
+
+function openPhotoProjectModal() {
+  const records = getPrintablePhotoRecords();
+  projectSelection = new Set(records.filter(r => r.showInGallery !== false).map(r => r.id));
+  currentProjectType = 'calendar';
+  currentProjectTemplate = PROJECT_TEMPLATES.calendar[0].id;
+  bookPages = [];
+  document.querySelectorAll('[data-project-type]').forEach(el => el.classList.toggle('active', el.dataset.projectType === 'calendar'));
+  document.getElementById('project-year').value = new Date().getFullYear() + 1;
+  document.getElementById('calendar-year-field').classList.remove('hidden');
+  document.getElementById('book-page-composer').classList.add('hidden');
+  document.getElementById('project-preview').classList.add('hidden');
+  document.getElementById('print-project-btn').classList.add('hidden');
+  renderProjectTemplates();
+  renderProjectPhotoPicker();
+  openModal('modal-photo-project');
+}
+
+function toggleProjectPhoto(id) {
+  if (projectSelection.has(id)) {
+    projectSelection.delete(id);
+    bookPages = bookPages.map(page => ({ ...page, photoIds: page.photoIds.map(photoId => photoId === id ? '' : photoId) })).filter(page => page.photoIds.some(Boolean));
+  } else {
+    projectSelection.add(id);
+    if (currentProjectType === 'book') bookPages.push({ id: `bp${++bookPageSerial}`, layout: 1, photoIds: [id] });
+  }
+  document.getElementById('project-preview').classList.add('hidden');
+  document.getElementById('print-project-btn').classList.add('hidden');
+  renderProjectPhotoPicker();
+  if (currentProjectType === 'book') renderBookPageComposer();
+}
+
+function selectProjectType(type) {
+  currentProjectType = ['calendar', 'frame', 'book'].includes(type) ? type : 'calendar';
+  currentProjectTemplate = PROJECT_TEMPLATES[currentProjectType][0].id;
+  document.querySelectorAll('[data-project-type]').forEach(el => el.classList.toggle('active', el.dataset.projectType === currentProjectType));
+  document.getElementById('calendar-year-field').classList.toggle('hidden', currentProjectType !== 'calendar');
+  document.getElementById('book-page-composer').classList.toggle('hidden', currentProjectType !== 'book');
+  if (currentProjectType === 'book' && !bookPages.length) autoArrangeBookPages();
+  renderProjectTemplates();
+  document.getElementById('project-preview').classList.add('hidden');
+  document.getElementById('print-project-btn').classList.add('hidden');
+}
+
+function renderProjectTemplates() {
+  const templates = PROJECT_TEMPLATES[currentProjectType];
+  document.getElementById('project-template-grid').innerHTML = templates.map(template => `<button type="button" class="project-template ${template.id === currentProjectTemplate ? 'active' : ''}" onclick="selectProjectTemplate(${inlineArg(template.id)})"><strong class="block text-sm">${escapeHtml(template.name)}</strong><span class="block text-xs mt-1">${escapeHtml(template.note)}</span></button>`).join('');
+  const selected = templates.find(template => template.id === currentProjectTemplate) || templates[0];
+  document.getElementById('project-template-description').textContent = `当前版式：${selected.name}。${selected.note}`;
+}
+
+function selectProjectTemplate(templateId) {
+  const exists = PROJECT_TEMPLATES[currentProjectType].some(template => template.id === templateId);
+  if (!exists) return;
+  currentProjectTemplate = templateId;
+  renderProjectTemplates();
+  document.getElementById('project-preview').classList.add('hidden');
+  document.getElementById('print-project-btn').classList.add('hidden');
+}
+
+function getSelectedBookRecords() {
+  return getPrintablePhotoRecords().filter(record => projectSelection.has(record.id)).reverse();
+}
+
+function addBookPage(layout = 1) {
+  const safeLayout = Math.min(4, Math.max(1, Number(layout) || 1));
+  const page = { id: `bp${++bookPageSerial}`, layout: safeLayout, photoIds: [] };
+  const used = new Set(bookPages.flatMap(item => item.photoIds).filter(Boolean));
+  for (let index = 0; index < safeLayout; index++) { const nextId = getSelectedBookRecords().find(record => !used.has(record.id))?.id || ''; page.photoIds.push(nextId); if (nextId) used.add(nextId); }
+  bookPages.push(page);
+  renderBookPageComposer();
+  document.getElementById('project-preview').classList.add('hidden');
+  document.getElementById('print-project-btn').classList.add('hidden');
+}
+
+function autoArrangeBookPages() {
+  bookPages = getSelectedBookRecords().map(record => ({ id: `bp${++bookPageSerial}`, layout: 1, photoIds: [record.id] }));
+  renderBookPageComposer();
+  document.getElementById('project-preview').classList.add('hidden');
+  document.getElementById('print-project-btn').classList.add('hidden');
+}
+
+function clearBookPages() {
+  bookPages = [];
+  renderBookPageComposer();
+  document.getElementById('project-preview').classList.add('hidden');
+  document.getElementById('print-project-btn').classList.add('hidden');
+}
+
+function setBookPageLayout(pageId, layout) {
+  const page = bookPages.find(item => item.id === pageId); if (!page) return;
+  page.layout = Math.min(4, Math.max(1, Number(layout) || 1));
+  page.photoIds = page.photoIds.slice(0, page.layout);
+  const used = new Set(bookPages.filter(item => item.id !== pageId).flatMap(item => item.photoIds).concat(page.photoIds).filter(Boolean));
+  while (page.photoIds.length < page.layout) { const nextId = getSelectedBookRecords().find(record => !used.has(record.id))?.id || ''; page.photoIds.push(nextId); if (nextId) used.add(nextId); }
+  renderBookPageComposer();
+  document.getElementById('project-preview').classList.add('hidden');
+  document.getElementById('print-project-btn').classList.add('hidden');
+}
+
+function setBookPagePhoto(pageId, slotIndex, photoId) {
+  const page = bookPages.find(item => item.id === pageId); if (!page) return;
+  page.photoIds[slotIndex] = projectSelection.has(photoId) ? photoId : '';
+  document.getElementById('project-preview').classList.add('hidden');
+  document.getElementById('print-project-btn').classList.add('hidden');
+}
+
+function moveBookPage(pageId, direction) {
+  const index = bookPages.findIndex(page => page.id === pageId); const target = index + direction;
+  if (index < 0 || target < 0 || target >= bookPages.length) return;
+  [bookPages[index], bookPages[target]] = [bookPages[target], bookPages[index]];
+  renderBookPageComposer();
+  document.getElementById('project-preview').classList.add('hidden');
+  document.getElementById('print-project-btn').classList.add('hidden');
+}
+
+function removeBookPage(pageId) {
+  bookPages = bookPages.filter(page => page.id !== pageId);
+  renderBookPageComposer();
+  document.getElementById('project-preview').classList.add('hidden');
+  document.getElementById('print-project-btn').classList.add('hidden');
+}
+
+function renderBookPageComposer() {
+  const list = document.getElementById('book-page-list');
+  const empty = document.getElementById('book-page-empty');
+  if (!list || !empty) return;
+  const records = getSelectedBookRecords();
+  list.innerHTML = bookPages.map((page, pageIndex) => {
+    const slots = Array.from({ length: page.layout }, (_, slotIndex) => {
+      const selectedId = page.photoIds[slotIndex] || '';
+      const options = [`<option value="">请选择照片</option>`].concat(records.map(record => `<option value="${escapeHtml(record.id)}" ${record.id === selectedId ? 'selected' : ''}>${escapeHtml(formatDate(record.date))} · ${escapeHtml(record.title || '成长照片')}</option>`)).join('');
+      return `<div class="book-photo-slot"><label>位置 ${slotIndex + 1}</label><select onchange="setBookPagePhoto(${inlineArg(page.id)}, ${slotIndex}, this.value)">${options}</select></div>`;
+    }).join('');
+    const layoutButtons = [1,2,3,4].map(count => `<button type="button" class="layout-choice ${page.layout === count ? 'active' : ''}" onclick="setBookPageLayout(${inlineArg(page.id)}, ${count})">${count === 1 ? '单图' : count + '拼'}</button>`).join('');
+    return `<div class="book-page-card"><div class="book-page-toolbar"><div><strong>第 ${pageIndex + 1} 页</strong><div class="layout-choice-group mt-2">${layoutButtons}</div></div><div class="book-page-actions"><button type="button" onclick="moveBookPage(${inlineArg(page.id)}, -1)" ${pageIndex === 0 ? 'disabled' : ''}>上移</button><button type="button" onclick="moveBookPage(${inlineArg(page.id)}, 1)" ${pageIndex === bookPages.length - 1 ? 'disabled' : ''}>下移</button><button type="button" onclick="removeBookPage(${inlineArg(page.id)})" style="color:#C77264;">删除</button></div></div><div class="book-photo-slots">${slots}</div></div>`;
+  }).join('');
+  empty.classList.toggle('hidden', bookPages.length > 0);
+}
+
+function calendarCells(year, month) {
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  const first = new Date(year, month, 1).getDay();
+  const days = new Date(year, month + 1, 0).getDate();
+  const cells = weekdays.map(day => `<span class="weekday">${day}</span>`);
+  for (let i = 0; i < first; i++) cells.push('<span></span>');
+  for (let day = 1; day <= days; day++) cells.push(`<span>${day}</span>`);
+  while ((cells.length - 7) % 7 !== 0) cells.push('<span></span>');
+  return cells.join('');
+}
+
+async function buildPhotoProject() {
+  const records = getPrintablePhotoRecords().filter(r => projectSelection.has(r.id)).reverse();
+  if (!records.length) { toast('请至少选择一张照片'); return; }
+  const photos = [];
+  for (const record of records) {
+    const url = await getMediaUrl(record.mediaId);
+    if (url) photos.push({ record, url });
+  }
+  if (!photos.length) { toast('所选照片暂时无法加载'); return; }
+  const child = DB.getActiveChild();
+  const childName = escapeHtml(child?.nickname || '宝贝');
+  let html = '';
+  if (currentProjectType === 'calendar') {
+    const year = Math.min(2100, Math.max(2000, Number(document.getElementById('project-year').value) || new Date().getFullYear()));
+    const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+    const palette = [['#D67D3E','#FFF0E4'],['#6B8E5A','#EDF5E9'],['#C77264','#FBEAE6'],['#A87F1F','#FFF7D8'],['#6B7FA8','#EAF0FA'],['#9A6B8F','#F5EAF2']];
+    html = monthNames.map((monthName, index) => {
+      const photo = photos[index % photos.length];
+      const photoUrl = escapeHtml(photo.url);
+      const grid = calendarCells(year, index);
+      if (currentProjectTemplate === 'calendar-minimal') return `<section class="print-page calendar-minimal"><div class="flex justify-between items-baseline mb-7"><div class="font-serif text-5xl">${String(index + 1).padStart(2, '0')}</div><div class="text-sm tracking-widest">${year} · ${childName}</div></div><img class="calendar-photo" src="${photoUrl}" alt=""><div class="calendar-grid">${grid}</div></section>`;
+      if (currentProjectTemplate === 'calendar-color') { const [accent, soft] = palette[index % palette.length]; return `<section class="print-page calendar-color" style="--template-accent:${accent};--template-soft:${soft};"><div class="flex items-center justify-between mb-5"><div><div class="text-sm tracking-widest" style="color:${accent};">${childName} · GROWING DAYS</div><div class="font-serif text-5xl font-bold mt-1">${monthName}</div></div><div class="font-serif text-4xl" style="color:${accent};">${year}</div></div><img class="calendar-photo" src="${photoUrl}" alt=""><div class="calendar-grid">${grid}</div></section>`; }
+      return `<section class="print-page"><div class="flex items-end justify-between mb-5"><div><div class="font-serif text-4xl font-bold">${monthName}</div><div class="text-sm mt-1" style="color:#786f65;">${year} · ${childName}的成长台历</div></div><div class="font-serif text-3xl">${year}</div></div><img class="calendar-photo" src="${photoUrl}" alt=""><div class="calendar-grid">${grid}</div></section>`;
+    }).join('');
+  } else if (currentProjectType === 'frame') {
+    html = photos.map(({ record, url }) => {
+      const photoUrl = escapeHtml(url); const date = escapeHtml(formatDate(record.date));
+      if (currentProjectTemplate === 'frame-polaroid') return `<section class="print-page frame-polaroid"><div class="frame-polaroid-card"><img class="print-photo" src="${photoUrl}" alt=""><div class="font-serif text-2xl mt-5">${date}</div><div class="text-sm mt-2" style="color:#786f65;">${childName} · 成长手记</div></div></section>`;
+      if (currentProjectTemplate === 'frame-poster') return `<section class="print-page frame-poster"><img class="print-photo" src="${photoUrl}" alt=""><div class="frame-poster-copy"><div class="text-sm tracking-widest">${date}</div><div class="font-serif text-4xl font-bold mt-2">${childName}的珍贵时刻</div></div></section>`;
+      return `<section class="print-page"><div class="frame-mat"><img class="print-photo" src="${photoUrl}" alt=""></div><div class="text-center mt-5"><div class="font-serif text-2xl">${childName}的珍贵时刻</div><div class="text-sm mt-2" style="color:#786f65;">${date}</div></div></section>`;
+    }).join('');
+  } else {
+    const photoById = new Map(photos.map(photo => [photo.record.id, photo]));
+    if (!bookPages.length) { toast('请先为成长书添加至少一页'); return; }
+    const incompletePage = bookPages.findIndex(page => page.photoIds.length !== page.layout || page.photoIds.some(photoId => !photoById.has(photoId)));
+    if (incompletePage !== -1) { toast(`第 ${incompletePage + 1} 页还有照片位置未选择`); return; }
+    const arrangedPages = bookPages.map(page => ({ ...page, photos: page.photoIds.map(photoId => photoById.get(photoId)) }));
+    const coverTone = currentProjectTemplate === 'book-magazine' ? 'style="background:#2D2A26;color:white;"' : currentProjectTemplate === 'book-mosaic' ? 'style="background:#EAF0E5;"' : '';
+    const cover = `<section class="print-page book-cover" ${coverTone}><div class="text-sm tracking-widest mb-5" style="color:#D67D3E;">GROWING UP</div><h1 class="font-serif text-5xl font-bold">${childName}的成长书</h1><p class="mt-5" style="opacity:.68;">把每一个平凡又闪亮的日子，装订成爱。</p></section>`;
+    const pages = arrangedPages.map((page, pageIndex) => {
+      const firstRecord = page.photos[0].record;
+      const figures = page.photos.map(({ record, url }) => `<figure><img src="${escapeHtml(url)}" alt=""><figcaption>${escapeHtml(formatDate(record.date))}${page.layout === 1 && record.content ? ` · ${escapeHtml(record.content)}` : ''}</figcaption></figure>`).join('');
+      const grid = `<div class="book-layout-grid layout-${page.layout}">${figures}</div>`;
+      if (currentProjectTemplate === 'book-magazine') return `<section class="print-page book-page-magazine"><div class="flex items-end justify-between mb-5"><div><div class="text-xs tracking-widest" style="color:#A56B58;">STORY ${String(pageIndex + 1).padStart(2, '0')}</div><h2 class="font-serif text-4xl font-bold mt-2">${escapeHtml(firstRecord.title || '成长时刻')}</h2></div><div class="text-sm">${childName}</div></div>${grid}</section>`;
+      if (currentProjectTemplate === 'book-mosaic') return `<section class="print-page book-page-mosaic"><div class="flex items-end justify-between mb-6"><div><div class="text-xs tracking-widest" style="color:#6B8E5A;">CHAPTER ${String(pageIndex + 1).padStart(2, '0')}</div><h2 class="font-serif text-3xl font-bold mt-2">一起长大的日子</h2></div><div class="text-sm" style="color:#786f65;">${childName}</div></div>${grid}</section>`;
+      return `<section class="print-page"><div class="mb-5"><div class="text-sm" style="color:#A56B58;">第 ${pageIndex + 1} 页 · ${escapeHtml(formatDate(firstRecord.date))}</div><h2 class="font-serif text-3xl font-bold mt-2">${escapeHtml(firstRecord.title || '成长时刻')}</h2></div>${grid}</section>`;
+    }).join('');
+    html = cover + pages;
+  }
+  const preview = document.getElementById('project-preview');
+  preview.className = `project-preview project-${currentProjectType}`;
+  preview.innerHTML = html;
+  document.getElementById('print-project-btn').classList.remove('hidden');
+  preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  toast('打印预览已生成');
+}
+
+function printPhotoProject() { window.print(); }
 
 function renderChildrenList() { document.getElementById('children-list').innerHTML = DB.data.children.map(c => { const a = calcAge(c.birthdate); return `<div class="flex items-center gap-3 p-3 rounded-xl border" style="border-color: var(--border-soft);"><div class="avatar" style="width: 40px; height: 40px; font-size: 16px;">${escapeHtml(c.nickname.charAt(0))}</div><div class="flex-1"><div class="font-semibold">${escapeHtml(c.nickname)}</div><div class="text-xs" style="color: var(--muted);">${escapeHtml(formatAge(a))}</div></div><button onclick="editChild(${inlineArg(c.id)})" class="btn-ghost text-xs">编辑</button><button onclick="deleteChild(${inlineArg(c.id)})" class="btn-ghost text-xs" style="color: #C77264;">删除</button></div>`; }).join(''); }
 
@@ -631,11 +1060,11 @@ async function openRecordModal(recordId = null) {
   if (recordId) {
     const r = DB.data.records.find(r => r.id === recordId); if (!r) return;
     document.getElementById('record-modal-title').textContent = '编辑记录'; document.getElementById('submit-btn').textContent = '更新记录';
-    form.elements['date'].value = r.date; form.elements['title'].value = r.title; form.elements['content'].value = r.content || '';
+    form.elements['date'].value = r.date; form.elements['title'].value = r.title; form.elements['content'].value = r.content || ''; form.elements['showInGallery'].checked = r.showInGallery !== false;
     if (r.measurements) { form.elements['height'].value = r.measurements.height || ''; form.elements['weight'].value = r.measurements.weight || ''; form.elements['head'].value = r.measurements.head || ''; }
     selectType(r.type);
     if (r.mediaId) { getMediaUrl(r.mediaId).then(url => { if (url) { const safeUrl = escapeHtml(url); if (r.mediaType === 'video') preview.innerHTML = `<video src="${safeUrl}" controls style="width:100%;max-height:250px;border-radius:12px;"></video>`; else preview.innerHTML = `<img src="${safeUrl}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;">`; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); area.classList.add('has-image'); } }); }
-  } else { document.getElementById('record-modal-title').textContent = '添加新记录'; document.getElementById('submit-btn').textContent = '保存记录'; document.getElementById('record-date').valueAsDate = new Date(); selectType('diary'); }
+  } else { document.getElementById('record-modal-title').textContent = '添加新记录'; document.getElementById('submit-btn').textContent = '保存记录'; document.getElementById('record-date').valueAsDate = new Date(); form.elements['showInGallery'].checked = false; selectType('diary'); }
   openModal('modal-record');
 }
 
@@ -715,7 +1144,7 @@ function editChild(id) { const c = DB.data.children.find(c => c.id === id); open
 async function deleteChild(id) { if (!FSAdapter.isAvailable && !(await connectAndStart())) return; if (confirm('确定删除这个孩子档案吗？')) { if (await DB.removeChild(id)) { renderChildrenList(); renderAll(); toast('已删除'); } else toast('至少保留一个孩子档案'); } }
 async function viewMedia(mediaId, caption, type = 'image') { const container = document.getElementById('viewer-container'); const closeBtn = `<button onclick="closeModal('modal-image-viewer')" class="absolute -top-12 right-0 text-white p-2 hover:opacity-70"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`; const url = await getMediaUrl(mediaId); if (!url) { toast("无法加载"); return; } const safeUrl = escapeHtml(url); const safeCaption = escapeHtml(caption || ''); if (type === 'video') container.innerHTML = `${closeBtn}<video src="${safeUrl}" controls autoplay class="w-full rounded-2xl max-h-[80vh]"></video><div class="text-white mt-4 text-center">${safeCaption}</div>`; else container.innerHTML = `${closeBtn}<img src="${safeUrl}" class="w-full rounded-2xl max-h-[80vh] object-contain"><div class="text-white mt-4 text-center">${safeCaption}</div>`; openModal('modal-image-viewer'); }
 async function changeFolder() { const connected = await FSAdapter.connectNewFolder(); if (!connected) return false; const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('需要授权文件夹读写权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); closeModal('modal-settings'); toast('已切换文件夹'); return true; }
-async function handleRecordSubmit(e) { e.preventDefault(); const formData = new FormData(e.target); const recordData = { type: currentType, date: formData.get('date'), title: formData.get('title'), content: formData.get('content') || '' }; if (currentType === 'measurement') recordData.measurements = { height: parseFloat(formData.get('height')) || null, weight: parseFloat(formData.get('weight')) || null, head: parseFloat(formData.get('head')) || null }; const oldR = editingRecordId ? DB.data.records.find(r => r.id === editingRecordId) : null; const oldMediaId = oldR ? oldR.mediaId : null; if (currentMediaBlob) { try { const ext = currentMediaType === 'video' ? 'mp4' : 'jpg'; let blob = currentMediaBlob; if (currentMediaType === 'image') blob = await compressImage(currentMediaBlob, 1920, 0.85); const fn = await FSAdapter.saveMedia(blob, ext); recordData.mediaId = fn; recordData.mediaType = currentMediaType; } catch (err) { toast("保存失败"); return; } } else if (oldR && oldR.mediaId) { recordData.mediaId = oldR.mediaId; recordData.mediaType = oldR.mediaType; } if (editingRecordId) { await DB.updateRecord(editingRecordId, recordData, oldMediaId); toast('记录已更新'); } else { await DB.addRecord(recordData); toast('记录已保存'); } closeModal('modal-record'); editingRecordId = null; renderAll(); }
+async function handleRecordSubmit(e) { e.preventDefault(); const formData = new FormData(e.target); const recordData = { type: currentType, date: formData.get('date'), title: formData.get('title'), content: formData.get('content') || '', showInGallery: formData.get('showInGallery') === 'on' }; if (currentType === 'measurement') recordData.measurements = { height: parseFloat(formData.get('height')) || null, weight: parseFloat(formData.get('weight')) || null, head: parseFloat(formData.get('head')) || null }; const oldR = editingRecordId ? DB.data.records.find(r => r.id === editingRecordId) : null; const oldMediaId = oldR ? oldR.mediaId : null; if (currentMediaBlob) { try { const ext = currentMediaType === 'video' ? 'mp4' : 'jpg'; let blob = currentMediaBlob; if (currentMediaType === 'image') blob = await compressImage(currentMediaBlob, 1920, 0.85); const fn = await FSAdapter.saveMedia(blob, ext); recordData.mediaId = fn; recordData.mediaType = currentMediaType; } catch (err) { toast("保存失败"); return; } } else if (oldR && oldR.mediaId) { recordData.mediaId = oldR.mediaId; recordData.mediaType = oldR.mediaType; } if (editingRecordId) { await DB.updateRecord(editingRecordId, recordData, oldMediaId); toast('记录已更新'); } else { await DB.addRecord(recordData); toast('记录已保存'); } closeModal('modal-record'); editingRecordId = null; renderAll(); }
 async function handleChildSubmit(e) { e.preventDefault(); if (!FSAdapter.isAvailable && !(await connectAndStart())) return; const formData = new FormData(e.target); const data = { nickname: formData.get('nickname'), name: formData.get('name'), birthdate: formData.get('birthdate'), gender: formData.get('gender') }; const id = formData.get('rec_id'); if (id) { await DB.updateChild(id, data); toast('已更新'); } else { await DB.addChild(data); toast('已添加'); } closeModal('modal-child'); renderChildrenList(); renderAll(); }
 async function connectAndStart() { if (!window.showDirectoryPicker) { setStorageMode(false, '当前浏览器不支持直接保存到文件夹。请使用电脑端 Chrome 或 Edge；示例内容仍可浏览。'); toast('请使用电脑端 Chrome 或 Edge 连接文件夹'); return false; } const connected = await FSAdapter.connectNewFolder(); if (!connected) return false; const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('需要授权文件夹读写权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); document.getElementById('permission-banner').style.display = 'none'; toast('已连接，今后的记录会保存到这个文件夹'); return true; }
 async function grantPermission() { const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('未获得文件夹权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); document.getElementById('permission-banner').style.display = 'none'; return true; }
@@ -742,7 +1171,7 @@ async function scanAndImportMedia() {
     if (!confirm(`发现 ${candidates.length} 个新文件${duplicateNote}。将复制到 media 文件夹，原文件会保留。是否继续？`)) return;
     for (const item of candidates) {
       const newId = await FSAdapter.copyMediaToFolder(item.entry);
-      DB.data.records.push({ id: 'r' + Date.now() + Math.random().toString(36).slice(2, 7), childId: DB.data.activeChildId, type: 'photo', date: new Date(item.file.lastModified).toISOString().slice(0, 10), title: item.file.name.replace(/\.[^/.]+$/, ''), content: '自动导入', mediaId: newId, mediaType: item.isVideo ? 'video' : 'image', sourceFingerprint: item.fingerprint });
+      DB.data.records.push({ id: 'r' + Date.now() + Math.random().toString(36).slice(2, 7), childId: DB.data.activeChildId, type: 'photo', date: new Date(item.file.lastModified).toISOString().slice(0, 10), title: item.file.name.replace(/\.[^/.]+$/, ''), content: '自动导入', mediaId: newId, mediaType: item.isVideo ? 'video' : 'image', showInGallery: false, sourceFingerprint: item.fingerprint });
       DB.data.importedMedia.push(item.fingerprint);
     }
     await DB.save(); renderAll(); closeModal('modal-settings');
