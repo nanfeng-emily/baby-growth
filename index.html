@@ -225,7 +225,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
       <div class="grid lg:grid-cols-3 gap-6 reveal">
         <div class="lg:col-span-2 card p-6">
           <div style="height: 400px;"><canvas id="growth-chart"></canvas></div>
-          <p class="text-xs mt-4 text-center" style="color: var(--muted);">虚线为 WS/T 423—2022《7岁以下儿童生长标准》参考曲线 (P3/P50/P97)</p>
+          <p class="text-xs mt-4 text-center" style="color: var(--muted);">虚线为 WS/T 423—2022《7岁以下儿童生长标准》参考曲线 (P3/P50/P75/P97)</p>
         </div>
         <div class="space-y-4">
           <div id="current-stats" class="card p-6"></div>
@@ -555,27 +555,28 @@ const MILESTONES = [
   { id: 'ride_tricycle', name: '骑三轮车', icon: '🚲', defaultAge: '36-48月' }
 ];
 
-// ==========================================
 // WS/T 423—2022《7岁以下儿童生长标准》参考数据
-// ==========================================
 const STANDARDS = {
   boy: {
     height: {
       months: [0, 3, 6, 9, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72],
       p3: [46.1, 59.0, 67.0, 72.0, 76.0, 82.0, 87.0, 92.0, 96.0, 99.0, 102.0, 105.0, 108.0, 111.0, 114.0],
       p50: [49.9, 62.0, 69.2, 74.2, 78.1, 84.1, 89.1, 94.1, 98.0, 101.0, 105.0, 108.0, 111.0, 114.0, 117.0],
+      p75: [51.4, 63.0, 70.3, 75.2, 79.1, 85.1, 90.1, 95.0, 99.0, 102.0, 106.0, 109.0, 112.0, 115.0, 118.0],
       p97: [53.7, 65.0, 72.0, 77.0, 81.0, 87.0, 92.0, 97.0, 101.0, 104.0, 108.0, 111.0, 114.0, 117.0, 120.0]
     },
     weight: {
       months: [0, 3, 6, 9, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72],
       p3: [2.5, 5.6, 7.0, 8.0, 9.0, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5, 17.5, 18.5, 19.5],
       p50: [3.3, 6.4, 8.0, 9.2, 10.3, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.5, 20.0, 21.5, 23.0],
+      p75: [3.7, 6.8, 8.4, 9.6, 10.7, 12.4, 13.5, 14.5, 15.5, 16.5, 17.5, 19.0, 20.5, 22.0, 23.5],
       p97: [4.4, 8.0, 10.0, 11.5, 12.5, 14.5, 16.0, 17.5, 19.0, 20.0, 22.0, 24.0, 26.0, 28.0, 30.0]
     },
     head: {
       months: [0, 3, 6, 9, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72],
       p3: [32.0, 39.0, 42.0, 44.0, 45.5, 47.5, 48.5, 49.0, 49.5, 49.8, 50.0, 50.2, 50.4, 50.6, 50.8],
       p50: [34.5, 41.0, 44.0, 46.0, 47.0, 48.5, 49.5, 50.0, 50.5, 50.8, 51.0, 51.2, 51.4, 51.6, 51.8],
+      p75: [35.4, 41.8, 44.8, 46.7, 47.7, 49.2, 50.2, 50.7, 51.2, 51.5, 51.7, 51.9, 52.1, 52.3, 52.5],
       p97: [37.0, 44.0, 46.5, 48.0, 49.0, 50.5, 51.5, 52.0, 52.5, 52.8, 53.0, 53.2, 53.4, 53.6, 53.8]
     }
   },
@@ -584,18 +585,21 @@ const STANDARDS = {
       months: [0, 3, 6, 9, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72],
       p3: [45.4, 57.0, 65.0, 70.0, 74.0, 80.0, 86.0, 91.0, 95.0, 98.0, 101.0, 104.0, 107.0, 110.0, 113.0],
       p50: [49.1, 60.0, 67.3, 72.5, 76.4, 82.4, 88.1, 93.0, 97.0, 100.0, 104.0, 107.0, 110.0, 113.0, 116.0],
+      p75: [50.5, 61.0, 68.3, 73.5, 77.4, 83.4, 89.1, 94.0, 98.0, 101.0, 105.0, 108.0, 111.0, 114.0, 117.0],
       p97: [52.9, 65.5, 72.0, 77.0, 81.0, 87.0, 92.0, 97.0, 101.0, 104.0, 108.0, 111.0, 114.0, 117.0, 120.0]
     },
     weight: {
       months: [0, 3, 6, 9, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72],
       p3: [2.4, 5.0, 6.5, 7.5, 8.5, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0],
       p50: [3.2, 5.8, 7.3, 8.6, 9.6, 11.0, 12.0, 13.0, 14.0, 15.5, 16.5, 18.0, 19.5, 21.0, 22.5],
+      p75: [3.5, 6.1, 7.6, 8.9, 9.9, 11.3, 12.4, 13.4, 14.5, 15.9, 17.0, 18.5, 20.0, 21.5, 23.0],
       p97: [4.2, 7.5, 9.5, 10.5, 11.5, 13.0, 14.5, 16.0, 17.5, 18.5, 20.5, 22.5, 24.5, 26.5, 28.5]
     },
     head: {
       months: [0, 3, 6, 9, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72],
       p3: [31.5, 38.0, 41.0, 43.0, 44.0, 46.0, 47.0, 47.5, 48.0, 48.2, 48.4, 48.6, 48.8, 49.0, 49.2],
       p50: [33.9, 40.0, 43.0, 44.5, 45.5, 47.0, 48.0, 48.5, 49.0, 49.2, 49.4, 49.6, 49.8, 50.0, 50.2],
+      p75: [34.7, 40.7, 43.7, 45.2, 46.2, 47.7, 48.7, 49.2, 49.7, 49.9, 50.1, 50.3, 50.5, 50.7, 50.9],
       p97: [36.2, 43.0, 45.5, 47.0, 48.0, 49.5, 50.5, 51.0, 51.5, 51.7, 51.9, 52.1, 52.3, 52.5, 52.7]
     }
   }
@@ -950,6 +954,7 @@ function renderGrowthChart() {
   const months = metricStandards.months;
   
   const p97Data = months.map((mo, i) => ({ x: mo, y: metricStandards.p97[i] }));
+  const p75Data = months.map((mo, i) => ({ x: mo, y: metricStandards.p75[i] }));
   const p50Data = months.map((mo, i) => ({ x: mo, y: metricStandards.p50[i] }));
   const p3Data = months.map((mo, i) => ({ x: mo, y: metricStandards.p3[i] }));
 
@@ -961,6 +966,16 @@ function renderGrowthChart() {
           label: 'P97 (上限参考)',
           data: p97Data,
           borderColor: 'rgba(214,125,62,0.25)',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [6, 6],
+          pointRadius: 0,
+          tension: 0.4
+        },
+        {
+          label: 'P75 (75%分位)',
+          data: p75Data,
+          borderColor: 'rgba(214,125,62,0.35)',
           backgroundColor: 'transparent',
           borderWidth: 1.5,
           borderDash: [6, 6],
@@ -1045,7 +1060,7 @@ function renderGrowthChart() {
   if (last.measurements.head) statsItems.push(`<div><div class="text-xs" style="color: var(--muted);">头围</div><div class="font-serif text-2xl font-bold">${last.measurements.head}<span class="text-sm ml-1" style="color: var(--muted);">cm</span></div></div>`);
   
   document.getElementById('current-stats').innerHTML = `
-    <div class="text-xs font-semibold tracking-wider mb-3" style="color: var(--muted);">最近一次测量</div>
+    <div class="text-xs font-semibold tracking-writer mb-3" style="color: var(--muted);">最近一次测量</div>
     <div class="grid grid-cols-${statsItems.length > 1 ? statsItems.length : 1} gap-3">
       ${statsItems.join('')}
     </div>
@@ -1454,4 +1469,128 @@ async function scanAndImportMedia() {
         const fileName = file.name.toLowerCase();
         const isMedia = fileName.match(/\.(jpg|jpeg|png|gif|mp4|mov|avi|webm)$/);
         if (entry.name === 'db.json' || !isMedia) continue;
-        const
+        const newMediaId = await FSAdapter.moveMediaToFolder(entry);
+        const isVideo = fileName.match(/\.(mp4|mov|avi|webm)$/);
+        const record = {
+          id: 'r' + Date.now() + Math.random().toString(36).substr(2, 5),
+          childId: DB.data.activeChildId,
+          type: 'photo',
+          date: new Date(file.lastModified).toISOString().slice(0, 10),
+          title: entry.name.replace(/\.[^/.]+$/, ""),
+          content: '从旧文件夹自动导入',
+          mediaId: newMediaId,
+          mediaType: isVideo ? 'video' : 'image'
+        };
+        DB.data.records.push(record);
+        importedCount++;
+      }
+    }
+    if (importedCount > 0) {
+      await DB.save();
+      renderAll();
+      toast(`成功扫描并导入了 ${importedCount} 个媒体文件！`);
+    } else {
+      toast("未在根目录发现可导入的散落媒体文件。");
+    }
+    closeModal('modal-settings');
+  } catch (err) {
+    toast("扫描导入失败：" + err.message);
+  }
+}
+
+async function initApp() {
+  try {
+    if (!window.showDirectoryPicker) {
+      document.getElementById('unsupported-banner').style.display = 'flex';
+      return;
+    }
+    const hasSavedHandle = await FSAdapter.init();
+    if (hasSavedHandle) {
+      const perm = await FSAdapter.rootDir.queryPermission({ mode: 'readwrite' });
+      if (perm === 'granted') {
+        await FSAdapter.verifyPermission();
+        await FSAdapter.setupDirs();
+        await DB.load();
+        renderAll();
+      } else {
+        document.getElementById('permission-banner').style.display = 'block';
+      }
+    } else {
+      document.getElementById('welcome-screen').classList.add('active');
+    }
+    
+    const timelineContainer = document.getElementById('timeline-container');
+    if (timelineContainer) {
+      timelineContainer.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.edit-btn');
+        const deleteBtn = e.target.closest('.delete-btn');
+        if (editBtn) {
+          e.stopPropagation();
+          openRecordModal(editBtn.dataset.id);
+        } else if (deleteBtn) {
+          e.stopPropagation();
+          await deleteRecord(deleteBtn.dataset.id);
+        }
+      });
+    }
+
+    document.querySelectorAll('#timeline-filters .chip').forEach(chip => {
+      chip.addEventListener('click', () => switchTimelineFilter(chip.dataset.filter));
+    });
+    
+    const mediaInput = document.getElementById('media-input');
+    if (mediaInput) {
+      mediaInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          currentMediaBlob = file;
+          const preview = document.getElementById('media-preview');
+          const placeholder = document.getElementById('upload-placeholder');
+          const area = document.getElementById('media-upload-area');
+          if (file.type.startsWith('image/')) {
+            currentMediaType = 'image';
+            const url = URL.createObjectURL(file);
+            preview.innerHTML = `<img src="${url}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px;">`;
+          } else if (file.type.startsWith('video/')) {
+            currentMediaType = 'video';
+            const url = URL.createObjectURL(file);
+            preview.innerHTML = `<video src="${url}" controls style="width: 100%; max-height: 250px; border-radius: 12px;"></video>`;
+          } else {
+            toast('不支持的文件类型');
+            return;
+          }
+          preview.classList.remove('hidden');
+          placeholder.classList.add('hidden');
+          area.classList.add('has-image');
+        } catch (err) { 
+          toast('文件处理失败'); 
+        }
+      });
+    }
+    
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    } else {
+      document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+    }
+    
+  } catch (err) {
+    console.error("初始化错误:", err);
+    document.body.innerHTML = `<div style="text-align:center;padding:50px;">应用初始化失败，请检查网络或更换 Chrome 浏览器重试。<br><span style="font-size:12px;color:#999;">错误信息: ${err.message}</span></div>`;
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+</script>
+</body>
+</html>
