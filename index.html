@@ -112,34 +112,19 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 .action-btn { width: 32px; height: 32px; border-radius: 8px; background: var(--bg-2); color: var(--muted); cursor: pointer; transition: all 0.2s; border: none; display: flex; align-items: center; justify-content: center; }
 .action-btn:hover { background: var(--accent); color: white; }
 .action-btn.delete-btn:hover { background: #C77264; color: white; }
-.welcome-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 24px; text-align: center; }
-.welcome-screen.active { display: flex; }
 .permission-banner { position: fixed; top: 0; left: 0; right: 0; background: var(--accent); color: white; padding: 10px; text-align: center; z-index: 999; display: none; }
-.unsupported-banner { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.storage-banner { display: none; background: #FFF5E9; border-bottom: 1px solid #EBCFAF; color: var(--fg-soft); }
+.storage-banner.active { display: block; }
+.storage-banner-inner { max-width: 1280px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.storage-banner p { margin: 0; font-size: 13px; line-height: 1.55; }
+.storage-banner strong { color: var(--accent-dark); }
+@media (max-width: 640px) { .storage-banner-inner { align-items: flex-start; flex-direction: column; } }
 </style>
 </head>
 <body>
 
-<div id="unsupported-banner" class="unsupported-banner">
-  <div class="max-w-md">
-    <h2 class="font-serif text-2xl font-bold mb-4">浏览器环境不兼容</h2>
-    <p class="mb-6" style="color: var(--muted);">请务必在<strong>电脑端</strong>使用 <strong>Chrome</strong> 或 <strong>Edge</strong> 浏览器打开本网页。</p>
-  </div>
-</div>
-
 <div id="permission-banner" class="permission-banner">
   需要访问文件夹权限以加载和保存数据 <button onclick="grantPermission()" class="btn-primary" style="padding: 4px 12px; font-size: 12px; background: white; color: var(--accent-dark);">授予权限</button>
-</div>
-
-<div id="welcome-screen" class="welcome-screen">
-  <div class="max-w-md">
-    <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6" style="background: linear-gradient(135deg, var(--accent), var(--pink));">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-8-4.5-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6.5-8 11-8 11z"/></svg>
-    </div>
-    <h2 class="font-serif text-3xl font-bold mb-4">欢迎使用成长志</h2>
-    <p class="mb-6" style="color: var(--muted);">请选择您的<strong>网盘同步盘文件夹</strong>作为数据存储位置。</p>
-    <button onclick="connectAndStart()" class="btn-primary justify-center w-full">选择文件夹并开始</button>
-  </div>
 </div>
 
 <nav class="nav-bar">
@@ -148,7 +133,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
       <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, var(--accent), var(--pink));">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-8-4.5-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6.5-8 11-8 11z"/></svg>
       </div>
-      <div><div class="font-serif font-bold text-lg leading-none">成长志</div><div class="text-xs" style="color: var(--muted);">已连接本地文件夹</div></div>
+      <div><div class="font-serif font-bold text-lg leading-none">成长志</div><div id="storage-status" class="text-xs" style="color: var(--muted);">示例体验模式</div></div>
     </div>
     <div id="child-selector" class="child-selector hidden md:flex"></div>
     <div class="flex items-center gap-2">
@@ -163,6 +148,13 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
     </div>
   </div>
 </nav>
+
+<div id="storage-banner" class="storage-banner">
+  <div class="storage-banner-inner">
+    <p><strong>当前是示例体验模式。</strong>你可以先浏览全部功能；连接自己的文件夹后，新增内容才会真正保存。</p>
+    <button id="connect-storage-btn" onclick="connectAndStart()" class="btn-primary" style="padding: 9px 16px; white-space: nowrap;">连接文件夹开始保存</button>
+  </div>
+</div>
 
 <main>
   <section class="hero-bg">
@@ -221,6 +213,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
         <div class="lg:col-span-2 card p-6">
           <div style="height: 400px;"><canvas id="growth-chart"></canvas></div>
           <p class="text-xs mt-4 text-center" style="color: var(--muted);">虚线为 WS/T 423—2022《7岁以下儿童生长标准》参考曲线 (P3/P50/P75/P97)</p>
+          <p class="text-xs mt-2 text-center" style="color: #A56B58;">仅用于成长趋势记录，不代替儿保医生评估。</p>
         </div>
         <div class="space-y-4">
           <div id="current-stats" class="card p-6"></div>
@@ -367,7 +360,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
           <button onclick="exportData()" class="btn-secondary justify-center w-full">下载并备份文字数据(JSON)</button>
           <input type="file" id="import-json-input" accept=".json" hidden onchange="importJSON(event)">
           <button onclick="document.getElementById('import-json-input').click()" class="btn-secondary justify-center w-full">导入旧版日记文字(JSON)</button>
-          <button onclick="scanAndImportMedia()" class="btn-secondary justify-center w-full">扫描根目录并导入散落的照片/视频</button>
+          <button onclick="scanAndImportMedia()" class="btn-secondary justify-center w-full">复制导入散落的照片/视频</button>
           <button onclick="changeFolder()" class="btn-secondary justify-center w-full">更换存储文件夹</button>
         </div>
       </div>
@@ -403,6 +396,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 
 <div id="toast" class="toast"></div>
 
+<script src="./growth-standards.js"></script>
 <script>
 window.onerror = function(msg, url, line, col, error) { console.error("全局错误:", msg, error); return false; };
 
@@ -415,9 +409,9 @@ const FSAdapter = {
   async connectNewFolder() { try { this.rootDir = await window.showDirectoryPicker({ mode: 'readwrite' }); await HandleDB.set('rootDir', this.rootDir); return true; } catch (e) { return false; } },
   async setupDirs() { if (!this.rootDir) return; this.mediaDir = await this.rootDir.getDirectoryHandle('media', { create: true }); },
   async loadDB() { try { const fileHandle = await this.rootDir.getFileHandle('db.json'); const file = await fileHandle.getFile(); const text = await file.text(); return JSON.parse(text); } catch (e) { return null; } },
-  async saveDB(data) { if (!this.rootDir) return; try { const fileHandle = await this.rootDir.getFileHandle('db.json', { create: true }); const writable = await fileHandle.createWritable(); await writable.write(JSON.stringify(data, null, 2)); await writable.close(); } catch (e) { toast("保存失败：" + e.message); } },
+  async saveDB(data) { if (!this.rootDir) throw new Error('尚未连接存储文件夹'); try { const fileHandle = await this.rootDir.getFileHandle('db.json', { create: true }); const writable = await fileHandle.createWritable(); await writable.write(JSON.stringify(data, null, 2)); await writable.close(); return true; } catch (e) { toast("保存失败：" + e.message); throw e; } },
   async saveMedia(blob, ext) { const fileName = `media_${Date.now()}.${ext}`; const fileHandle = await this.mediaDir.getFileHandle(fileName, { create: true }); const writable = await fileHandle.createWritable(); await writable.write(blob); await writable.close(); return fileName; },
-  async moveMediaToFolder(fileHandle) { const file = await fileHandle.getFile(); const newName = `media_${Date.now()}_${file.name}`; const newFileHandle = await this.mediaDir.getFileHandle(newName, { create: true }); const writable = await newFileHandle.createWritable(); await writable.write(file); await writable.close(); await this.rootDir.removeEntry(fileHandle.name); return newName; },
+  async copyMediaToFolder(fileHandle) { const file = await fileHandle.getFile(); const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_'); const newName = `media_${Date.now()}_${crypto.randomUUID().slice(0, 8)}_${safeName}`; const newFileHandle = await this.mediaDir.getFileHandle(newName, { create: true }); const writable = await newFileHandle.createWritable(); await writable.write(file); await writable.close(); return newName; },
   async getMediaUrl(mediaId) { if (!mediaId) return ''; if (mediaId.startsWith('http')) return mediaId; if (this.urlCache[mediaId]) return this.urlCache[mediaId]; try { const fileHandle = await this.mediaDir.getFileHandle(mediaId); const file = await fileHandle.getFile(); const url = URL.createObjectURL(file); this.urlCache[mediaId] = url; return url; } catch (e) { return ''; } },
   async deleteMedia(mediaId) { if (!mediaId || mediaId.startsWith('http')) return; try { await this.mediaDir.removeEntry(mediaId); } catch (e) {} }
 };
@@ -425,10 +419,24 @@ const FSAdapter = {
 async function getMediaUrl(mediaId) { return await FSAdapter.getMediaUrl(mediaId); }
 async function loadMediaElements() { const elements = document.querySelectorAll('[data-media-id]'); for (const el of elements) { const id = el.dataset.mediaId; const url = await getMediaUrl(id); if (url) el.src = url; } }
 
-const STANDARDS = {
-  boy: { height: { months: [0,3,6,9,12,18,24,30,36,42,48,54,60,66,72], p3: [46.1,59.0,67.0,72.0,76.0,82.0,87.0,92.0,96.0,99.0,102.0,105.0,108.0,111.0,114.0], p50: [49.9,62.0,69.2,74.2,78.1,84.1,89.1,94.1,98.0,101.0,105.0,108.0,111.0,114.0,117.0], p75: [51.4,63.0,70.3,75.2,79.1,85.1,90.1,95.0,99.0,102.0,106.0,109.0,112.0,115.0,118.0], p97: [53.7,65.0,72.0,77.0,81.0,87.0,92.0,97.0,101.0,104.0,108.0,111.0,114.0,117.0,120.0] }, weight: { months: [0,3,6,9,12,18,24,30,36,42,48,54,60,66,72], p3: [2.5,5.6,7.0,8.0,9.0,10.5,11.5,12.5,13.5,14.5,15.5,16.5,17.5,18.5,19.5], p50: [3.3,6.4,8.0,9.2,10.3,12.0,13.0,14.0,15.0,16.0,17.0,18.5,20.0,21.5,23.0], p75: [3.7,6.8,8.4,9.6,10.7,12.4,13.5,14.5,15.5,16.5,17.5,19.0,20.5,22.0,23.5], p97: [4.4,8.0,10.0,11.5,12.5,14.5,16.0,17.5,19.0,20.0,22.0,24.0,26.0,28.0,30.0] }, head: { months: [0,3,6,9,12,18,24,30,36,42,48,54,60,66,72], p3: [32.0,39.0,42.0,44.0,45.5,47.5,48.5,49.0,49.5,49.8,50.0,50.2,50.4,50.6,50.8], p50: [34.5,41.0,44.0,46.0,47.0,48.5,49.5,50.0,50.5,50.8,51.0,51.2,51.4,51.6,51.8], p75: [35.4,41.8,44.8,46.7,47.7,49.2,50.2,50.7,51.2,51.5,51.7,51.9,52.1,52.3,52.5], p97: [37.0,44.0,46.5,48.0,49.0,50.5,51.5,52.0,52.5,52.8,53.0,53.2,53.4,53.6,53.8] } },
-  girl: { height: { months: [0,3,6,9,12,18,24,30,36,42,48,54,60,66,72], p3: [45.4,57.0,65.0,70.0,74.0,80.0,86.0,91.0,95.0,98.0,101.0,104.0,107.0,110.0,113.0], p50: [49.1,60.0,67.3,72.5,76.4,82.4,88.1,93.0,97.0,100.0,104.0,107.0,110.0,113.0,116.0], p75: [50.5,61.0,68.3,73.5,77.4,83.4,89.1,94.0,98.0,101.0,105.0,108.0,111.0,114.0,117.0], p97: [52.9,65.5,72.0,77.0,81.0,87.0,92.0,97.0,101.0,104.0,108.0,111.0,114.0,117.0,120.0] }, weight: { months: [0,3,6,9,12,18,24,30,36,42,48,54,60,66,72], p3: [2.4,5.0,6.5,7.5,8.5,10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0], p50: [3.2,5.8,7.3,8.6,9.6,11.0,12.0,13.0,14.0,15.5,16.5,18.0,19.5,21.0,22.5], p75: [3.5,6.1,7.6,8.9,9.9,11.3,12.4,13.4,14.5,15.9,17.0,18.5,20.0,21.5,23.0], p97: [4.2,7.5,9.5,10.5,11.5,13.0,14.5,16.0,17.5,18.5,20.5,22.5,24.5,26.5,28.5] }, head: { months: [0,3,6,9,12,18,24,30,36,42,48,54,60,66,72], p3: [31.5,38.0,41.0,43.0,44.0,46.0,47.0,47.5,48.0,48.2,48.4,48.6,48.8,49.0,49.2], p50: [33.9,40.0,43.0,44.5,45.5,47.0,48.0,48.5,49.0,49.2,49.4,49.6,49.8,50.0,50.2], p75: [34.7,40.7,43.7,45.2,46.2,47.7,48.7,49.2,49.7,49.9,50.1,50.3,50.5,50.7,50.9], p97: [36.2,43.0,45.5,47.0,48.0,49.5,50.5,51.0,51.5,51.7,51.9,52.1,52.3,52.5,52.7] } }
-};
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+}
+
+function inlineArg(value) {
+  return escapeHtml(JSON.stringify(String(value ?? '')));
+}
+
+function setStorageMode(connected, message) {
+  const status = document.getElementById('storage-status');
+  const banner = document.getElementById('storage-banner');
+  if (status) status.textContent = connected ? '已连接本地文件夹' : '示例体验模式';
+  if (banner) {
+    banner.classList.toggle('active', !connected);
+    const text = banner.querySelector('p');
+    if (text && message) text.textContent = message;
+  }
+}
 
 const SAMPLE_CHILD = { id: 'c1', name: '小满', nickname: '满满', birthdate: '2022-03-15', gender: 'M', avatar: null };
 const SAMPLE_RECORDS = [
@@ -449,13 +457,15 @@ const DB = {
     if (loadedData && Array.isArray(loadedData.children) && Array.isArray(loadedData.records)) {
       this.data = loadedData;
       if (!this.data.milestones) this.data.milestones = [];
+      if (!this.data.importedMedia) this.data.importedMedia = [];
     } else {
-      this.data = this.getDefault();
+      this.data = this.getFreshData();
       await this.save();
     }
     return this.data;
   },
-  getDefault() { return { children: [SAMPLE_CHILD], activeChildId: 'c1', records: SAMPLE_RECORDS, milestones: [] }; },
+  getDemoData() { return { children: [{ ...SAMPLE_CHILD }], activeChildId: 'c1', records: SAMPLE_RECORDS.map(record => ({ ...record })), milestones: [], importedMedia: [] }; },
+  getFreshData() { return { children: [{ ...SAMPLE_CHILD, name: '', nickname: '宝贝', birthdate: new Date().toISOString().slice(0, 10) }], activeChildId: 'c1', records: [], milestones: [], importedMedia: [] }; },
   async save() { await FSAdapter.saveDB(this.data); },
   async addChild(child) { child.id = 'c' + Date.now(); this.data.children.push(child); this.data.activeChildId = child.id; await this.save(); },
   async updateChild(id, updates) { const c = this.data.children.find(c => c.id === id); if (c) { Object.assign(c, updates); await this.save(); } },
@@ -481,8 +491,8 @@ function compressImage(file, maxSize = 1920, quality = 0.85) { return new Promis
 
 let currentTimelineFilter = 'all', currentMetric = 'height', growthChart = null, currentMediaBlob = null, currentMediaType = 'image', currentType = 'diary', editingRecordId = null, currentMilestoneMediaBlob = null, editingMilestoneId = null;
 
-function renderNav() { const s = document.getElementById('child-selector'); if (!DB.data) return; s.innerHTML = DB.data.children.map(c => `<button class="child-tab ${c.id === DB.data.activeChildId ? 'active' : ''}" onclick="switchChild('${c.id}')"><div class="avatar" style="width: 22px; height: 22px; font-size: 11px;">${c.nickname.charAt(0)}</div>${c.nickname}</button>`).join(''); }
-function renderHero() { const c = DB.getActiveChild(); if (!c) return; const a = calcAge(c.birthdate), d = calcDays(c.birthdate); document.getElementById('hero-child-card').innerHTML = `<div class="flex items-center gap-4 mb-6"><div class="avatar" style="width: 64px; height: 64px; font-size: 26px;">${c.nickname.charAt(0)}</div><div><div class="font-serif text-2xl font-semibold">${c.nickname}</div><div class="text-sm" style="color: var(--muted);">${formatAge(a)} · ${c.gender === 'M' ? '男孩' : '女孩'}</div></div></div><div class="border-t pt-6" style="border-color: var(--border-soft);"><div class="text-xs font-semibold tracking-wider mb-2" style="color: var(--muted);">已陪伴</div><div class="flex items-baseline gap-2"><span class="big-number" style="font-size: 64px; color: var(--accent);">${d}</span><span class="text-lg" style="color: var(--muted);">天</span></div></div><div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t" style="border-color: var(--border-soft);"><div><div class="text-xs font-semibold tracking-wider mb-1" style="color: var(--muted);">出生日期</div><div class="text-sm font-medium">${formatDate(c.birthdate)}</div></div></div>`; }
+function renderNav() { const s = document.getElementById('child-selector'); if (!DB.data) return; s.innerHTML = DB.data.children.map(c => `<button class="child-tab ${c.id === DB.data.activeChildId ? 'active' : ''}" onclick="switchChild(${inlineArg(c.id)})"><div class="avatar" style="width: 22px; height: 22px; font-size: 11px;">${escapeHtml(c.nickname.charAt(0))}</div>${escapeHtml(c.nickname)}</button>`).join(''); }
+function renderHero() { const c = DB.getActiveChild(); if (!c) return; const a = calcAge(c.birthdate), d = calcDays(c.birthdate); document.getElementById('hero-child-card').innerHTML = `<div class="flex items-center gap-4 mb-6"><div class="avatar" style="width: 64px; height: 64px; font-size: 26px;">${escapeHtml(c.nickname.charAt(0))}</div><div><div class="font-serif text-2xl font-semibold">${escapeHtml(c.nickname)}</div><div class="text-sm" style="color: var(--muted);">${escapeHtml(formatAge(a))} · ${c.gender === 'M' ? '男孩' : '女孩'}</div></div></div><div class="border-t pt-6" style="border-color: var(--border-soft);"><div class="text-xs font-semibold tracking-wider mb-2" style="color: var(--muted);">已陪伴</div><div class="flex items-baseline gap-2"><span class="big-number" style="font-size: 64px; color: var(--accent);">${Number.isFinite(d) ? d : '--'}</span><span class="text-lg" style="color: var(--muted);">天</span></div></div><div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t" style="border-color: var(--border-soft);"><div><div class="text-xs font-semibold tracking-wider mb-1" style="color: var(--muted);">出生日期</div><div class="text-sm font-medium">${escapeHtml(formatDate(c.birthdate))}</div></div></div>`; }
 
 function renderStats() {
   const c = DB.getActiveChild(); if (!c) return;
@@ -495,7 +505,7 @@ function renderStats() {
   ].map(s => `<div class="card p-5 md:p-6"><div class="text-xs font-semibold tracking-wider mb-3" style="color: var(--muted);">${s.label}</div><div class="flex items-baseline gap-1"><span class="big-number" style="font-size: 36px;">${s.value}</span>${s.suffix ? `<span class="text-sm" style="color: var(--muted);">${s.suffix}</span>` : ''}</div></div>`).join('');
 }
 
-function getTypeBadge(type) { const l = { diary: '日记', milestone: '里程碑', measurement: '测量', photo: '照片' }; return `<span class="type-badge type-${type}">${l[type] || '日记'}</span>`; }
+function getTypeBadge(type) { const l = { diary: '日记', milestone: '里程碑', measurement: '测量', photo: '照片' }; const safeType = Object.hasOwn(l, type) ? type : 'diary'; return `<span class="type-badge type-${safeType}">${l[safeType]}</span>`; }
 
 function renderTimeline() {
   const records = DB.getRecords(); const filtered = currentTimelineFilter === 'all' ? records : records.filter(r => r.type === currentTimelineFilter);
@@ -512,14 +522,15 @@ function renderTimeline() {
       if (r.measurements.head) items.push(`<div class="p-3 rounded-lg" style="background: var(--bg-2);"><div class="text-xs" style="color: var(--muted);">头围</div><div class="font-serif text-xl font-semibold">${r.measurements.head}<span class="text-sm ml-1" style="color: var(--muted);">cm</span></div></div>`);
       if (items.length > 0) contentHtml += `<div class="grid grid-cols-${items.length} gap-3 mt-3">${items.join('')}</div>`;
     }
-    if (r.content) contentHtml += `<p class="text-sm leading-relaxed mt-3" style="color: var(--fg-soft);">${r.content}</p>`;
-    if (r.mediaId) { const st = r.title.replace(/'/g, "\\'"); if (r.mediaType === 'video') contentHtml += `<video data-media-id="${r.mediaId}" controls preload="metadata"></video>`; else contentHtml += `<img data-media-id="${r.mediaId}" onclick="viewMedia('${r.mediaId}', '${st}', 'image')" style="cursor: pointer;">`; }
-    html += `<div class="timeline-item"><div class="timeline-marker"><div class="month-day">${d.getMonth()+1}月${d.getDate()}日</div><div class="year">${year}</div></div><div class="timeline-dot ${r.type}"></div><div class="timeline-card"><div class="action-btns"><button class="action-btn edit-btn" data-id="${r.id}" title="编辑"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn delete-btn" data-id="${r.id}" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div><div class="flex items-center mb-2 gap-2" style="padding-right: 80px;"><h3 class="font-serif text-lg font-semibold">${r.title}</h3>${getTypeBadge(r.type)}</div>${contentHtml}</div></div>`;
+    if (r.content) contentHtml += `<p class="text-sm leading-relaxed mt-3" style="color: var(--fg-soft);">${escapeHtml(r.content)}</p>`;
+    if (r.mediaId) { if (r.mediaType === 'video') contentHtml += `<video data-media-id="${escapeHtml(r.mediaId)}" controls preload="metadata"></video>`; else contentHtml += `<img data-media-id="${escapeHtml(r.mediaId)}" onclick="viewMedia(${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, 'image')" style="cursor: pointer;">`; }
+    const safeType = ['diary', 'milestone', 'measurement', 'photo'].includes(r.type) ? r.type : 'diary';
+    html += `<div class="timeline-item"><div class="timeline-marker"><div class="month-day">${d.getMonth()+1}月${d.getDate()}日</div><div class="year">${year}</div></div><div class="timeline-dot ${safeType}"></div><div class="timeline-card"><div class="action-btns"><button class="action-btn edit-btn" data-id="${escapeHtml(r.id)}" title="编辑"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn delete-btn" data-id="${escapeHtml(r.id)}" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div><div class="flex items-center mb-2 gap-2" style="padding-right: 80px;"><h3 class="font-serif text-lg font-semibold">${escapeHtml(r.title)}</h3>${getTypeBadge(safeType)}</div>${contentHtml}</div></div>`;
   });
   container.innerHTML = html; loadMediaElements();
 }
 
-async function deleteRecord(id) { if (confirm('确定要删除这条记录吗？')) { await DB.removeRecord(id); renderAll(); toast('记录已删除'); } }
+async function deleteRecord(id) { if (!FSAdapter.isAvailable && !(await connectAndStart())) return; if (confirm('确定要删除这条记录吗？')) { await DB.removeRecord(id); renderAll(); toast('记录已删除'); } }
 
 function renderGrowthChart() {
   const c = DB.getActiveChild(); if (!c) return; const ms = DB.getMeasurements(); const el = document.getElementById('growth-chart'); if (!el || typeof Chart === 'undefined') return; const ctx = el.getContext('2d');
@@ -547,10 +558,10 @@ function renderMilestones() {
   document.getElementById('milestone-progress').innerHTML = `<div class="text-sm" style="color: var(--muted);">已记录</div><div class="font-serif text-3xl font-bold" style="color: var(--sage);">${ms.length}<span class="text-lg" style="color: var(--muted);">个</span></div>`;
   let html = `<div class="milestone-add-card" onclick="openMilestoneModal()" style="grid-column: span 1;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><p class="text-sm mt-2" style="color: var(--accent);">添加里程碑</p></div>`;
   ms.forEach(m => {
-    html += `<div class="milestone-card achieved" onclick="openMilestoneModal('${m.id}')" style="cursor: pointer;">
-      <button class="ms-delete" onclick="event.stopPropagation(); deleteMilestoneConfirm('${m.id}')" title="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-      ${m.mediaId ? `<div data-ms-img="${m.mediaId}" style="width: 100%; height: 120px; background: var(--bg-2); border-radius: 8px; margin-bottom: 12px; background-size: cover; background-position: center;"></div>` : '<div style="width:100%;height:120px;background:var(--bg-2);border-radius:8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>'}
-      <div class="font-serif text-lg font-semibold mb-1">${m.name}</div>
+    html += `<div class="milestone-card achieved" onclick="openMilestoneModal(${inlineArg(m.id)})" style="cursor: pointer;">
+      <button class="ms-delete" onclick="event.stopPropagation(); deleteMilestoneConfirm(${inlineArg(m.id)})" title="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+      ${m.mediaId ? `<div data-ms-img="${escapeHtml(m.mediaId)}" style="width: 100%; height: 120px; background: var(--bg-2); border-radius: 8px; margin-bottom: 12px; background-size: cover; background-position: center;"></div>` : '<div style="width:100%;height:120px;background:var(--bg-2);border-radius:8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>'}
+      <div class="font-serif text-lg font-semibold mb-1">${escapeHtml(m.name)}</div>
       <div class="text-xs" style="color: var(--sage);">${formatDate(m.date)}</div>
     </div>`;
   });
@@ -559,6 +570,7 @@ function renderMilestones() {
 }
 
 async function deleteMilestoneConfirm(id) {
+  if (!FSAdapter.isAvailable && !(await connectAndStart())) return;
   if (confirm('确定删除这个里程碑吗？相关照片也会被删除。')) {
     await DB.removeMilestone(id);
     renderAll();
@@ -572,25 +584,24 @@ function renderGallery() {
   if (records.length === 0) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
   grid.innerHTML = records.map(r => {
-    const st = r.title.replace(/'/g, "\\'");
     const safeContent = (r.content || '').replace(/\n/g, ' ').trim();
-    const contentHtml = safeContent ? `<div class="text-xs mt-1 opacity-90 text-clamp-2">${safeContent}</div>` : '';
+    const contentHtml = safeContent ? `<div class="text-xs mt-1 opacity-90 text-clamp-2">${escapeHtml(safeContent)}</div>` : '';
     if (r.mediaType === 'video') {
-      return `<div class="gallery-item" onclick="viewMedia('${r.mediaId}', '${st}', 'video')">
-        <video data-media-id="${r.mediaId}" preload="metadata"></video>
+      return `<div class="gallery-item" onclick="viewMedia(${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, 'video')">
+        <video data-media-id="${escapeHtml(r.mediaId)}" preload="metadata"></video>
         <div class="play-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>
         <div class="overlay">
           <div class="text-xs opacity-80">${formatDate(r.date)}</div>
-          <div class="font-medium text-sm">${r.title}</div>
+          <div class="font-medium text-sm">${escapeHtml(r.title)}</div>
           ${contentHtml}
         </div>
       </div>`;
     }
-    return `<div class="gallery-item" onclick="viewMedia('${r.mediaId}', '${st}', 'image')">
-      <img data-media-id="${r.mediaId}" alt="${r.title}">
+    return `<div class="gallery-item" onclick="viewMedia(${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, 'image')">
+      <img data-media-id="${escapeHtml(r.mediaId)}" alt="${escapeHtml(r.title)}">
       <div class="overlay">
         <div class="text-xs opacity-80">${formatDate(r.date)}</div>
-        <div class="font-medium text-sm">${r.title}</div>
+        <div class="font-medium text-sm">${escapeHtml(r.title)}</div>
         ${contentHtml}
       </div>
     </div>`;
@@ -598,7 +609,7 @@ function renderGallery() {
   loadMediaElements();
 }
 
-function renderChildrenList() { document.getElementById('children-list').innerHTML = DB.data.children.map(c => { const a = calcAge(c.birthdate); return `<div class="flex items-center gap-3 p-3 rounded-xl border" style="border-color: var(--border-soft);"><div class="avatar" style="width: 40px; height: 40px; font-size: 16px;">${c.nickname.charAt(0)}</div><div class="flex-1"><div class="font-semibold">${c.nickname}</div><div class="text-xs" style="color: var(--muted);">${formatAge(a)}</div></div><button onclick="editChild('${c.id}')" class="btn-ghost text-xs">编辑</button><button onclick="deleteChild('${c.id}')" class="btn-ghost text-xs" style="color: #C77264;">删除</button></div>`; }).join(''); }
+function renderChildrenList() { document.getElementById('children-list').innerHTML = DB.data.children.map(c => { const a = calcAge(c.birthdate); return `<div class="flex items-center gap-3 p-3 rounded-xl border" style="border-color: var(--border-soft);"><div class="avatar" style="width: 40px; height: 40px; font-size: 16px;">${escapeHtml(c.nickname.charAt(0))}</div><div class="flex-1"><div class="font-semibold">${escapeHtml(c.nickname)}</div><div class="text-xs" style="color: var(--muted);">${escapeHtml(formatAge(a))}</div></div><button onclick="editChild(${inlineArg(c.id)})" class="btn-ghost text-xs">编辑</button><button onclick="deleteChild(${inlineArg(c.id)})" class="btn-ghost text-xs" style="color: #C77264;">删除</button></div>`; }).join(''); }
 
 function renderAll() { if (!DB.data) return; renderNav(); renderHero(); renderStats(); renderGallery(); renderGrowthChart(); renderMilestones(); renderTimeline(); }
 
@@ -608,7 +619,11 @@ function switchMetric(m) { currentMetric = m; document.querySelectorAll('[data-m
 function openModal(id) { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-function openRecordModal(recordId = null) {
+async function openRecordModal(recordId = null) {
+  if (!FSAdapter.isAvailable && !(await connectAndStart())) {
+    toast('连接存储文件夹后即可添加或编辑记录');
+    return;
+  }
   currentMediaBlob = null; currentMediaType = 'image'; editingRecordId = recordId;
   const form = document.getElementById('record-form'); form.reset();
   const preview = document.getElementById('media-preview'); const placeholder = document.getElementById('upload-placeholder'); const area = document.getElementById('media-upload-area');
@@ -619,7 +634,7 @@ function openRecordModal(recordId = null) {
     form.elements['date'].value = r.date; form.elements['title'].value = r.title; form.elements['content'].value = r.content || '';
     if (r.measurements) { form.elements['height'].value = r.measurements.height || ''; form.elements['weight'].value = r.measurements.weight || ''; form.elements['head'].value = r.measurements.head || ''; }
     selectType(r.type);
-    if (r.mediaId) { getMediaUrl(r.mediaId).then(url => { if (url) { if (r.mediaType === 'video') preview.innerHTML = `<video src="${url}" controls style="width:100%;max-height:250px;border-radius:12px;"></video>`; else preview.innerHTML = `<img src="${url}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;">`; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); area.classList.add('has-image'); } }); }
+    if (r.mediaId) { getMediaUrl(r.mediaId).then(url => { if (url) { const safeUrl = escapeHtml(url); if (r.mediaType === 'video') preview.innerHTML = `<video src="${safeUrl}" controls style="width:100%;max-height:250px;border-radius:12px;"></video>`; else preview.innerHTML = `<img src="${safeUrl}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;">`; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); area.classList.add('has-image'); } }); }
   } else { document.getElementById('record-modal-title').textContent = '添加新记录'; document.getElementById('submit-btn').textContent = '保存记录'; document.getElementById('record-date').valueAsDate = new Date(); selectType('diary'); }
   openModal('modal-record');
 }
@@ -634,7 +649,11 @@ function selectType(type) {
 }
 
 // 里程碑模态框
-function openMilestoneModal(id = null) {
+async function openMilestoneModal(id = null) {
+  if (!FSAdapter.isAvailable && !(await connectAndStart())) {
+    toast('连接存储文件夹后即可添加或编辑里程碑');
+    return;
+  }
   currentMilestoneMediaBlob = null; editingMilestoneId = id;
   const form = document.getElementById('milestone-form'); form.reset();
   const preview = document.getElementById('milestone-media-preview'); const placeholder = document.getElementById('milestone-upload-placeholder'); const area = document.getElementById('milestone-media-upload-area');
@@ -647,7 +666,7 @@ function openMilestoneModal(id = null) {
     document.getElementById('milestone-name').value = m.name || '';
     document.getElementById('milestone-date').value = m.date || new Date().toISOString().slice(0, 10);
     deleteBtn.classList.remove('hidden');
-    if (m.mediaId) { getMediaUrl(m.mediaId).then(url => { if (url) { preview.innerHTML = `<img src="${url}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;">`; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); area.classList.add('has-image'); } }); }
+    if (m.mediaId) { getMediaUrl(m.mediaId).then(url => { if (url) { preview.innerHTML = `<img src="${escapeHtml(url)}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;">`; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); area.classList.add('has-image'); } }); }
   } else {
     document.getElementById('milestone-modal-title').textContent = '添加里程碑';
     document.getElementById('milestone-date').value = new Date().toISOString().slice(0, 10);
@@ -658,6 +677,7 @@ function openMilestoneModal(id = null) {
 
 async function handleMilestoneSubmit(e) {
   e.preventDefault();
+  if (!FSAdapter.isAvailable && !(await connectAndStart())) return;
   const name = document.getElementById('milestone-name').value.trim();
   const date = document.getElementById('milestone-date').value;
   if (!name) { toast('请输入里程碑名称'); return; }
@@ -692,16 +712,43 @@ async function deleteMilestone() {
 function openSettings() { renderChildrenList(); openModal('modal-settings'); }
 function openChildModal(child = null) { const form = document.getElementById('child-form'); form.reset(); if (child) { document.getElementById('child-modal-title').textContent = '编辑孩子'; form.elements['rec_id'].value = child.id; form.elements['nickname'].value = child.nickname; form.elements['name'].value = child.name || ''; form.elements['birthdate'].value = child.birthdate; form.elements['gender'].value = child.gender; } else { document.getElementById('child-modal-title').textContent = '添加孩子'; form.elements['rec_id'].value = ''; } openModal('modal-child'); }
 function editChild(id) { const c = DB.data.children.find(c => c.id === id); openChildModal(c); }
-async function deleteChild(id) { if (confirm('确定删除这个孩子档案吗？')) { if (await DB.removeChild(id)) { renderChildrenList(); renderAll(); toast('已删除'); } else toast('至少保留一个孩子档案'); } }
-async function viewMedia(mediaId, caption, type = 'image') { const container = document.getElementById('viewer-container'); const closeBtn = `<button onclick="closeModal('modal-image-viewer')" class="absolute -top-12 right-0 text-white p-2 hover:opacity-70"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`; const url = await getMediaUrl(mediaId); if (!url) { toast("无法加载"); return; } if (type === 'video') container.innerHTML = `${closeBtn}<video src="${url}" controls autoplay class="w-full rounded-2xl max-h-[80vh]"></video><div class="text-white mt-4 text-center">${caption || ''}</div>`; else container.innerHTML = `${closeBtn}<img src="${url}" class="w-full rounded-2xl max-h-[80vh] object-contain"><div class="text-white mt-4 text-center">${caption || ''}</div>`; openModal('modal-image-viewer'); }
-async function changeFolder() { const connected = await FSAdapter.connectNewFolder(); if (connected) { const hasPerm = await FSAdapter.verifyPermission(); if (hasPerm) { await FSAdapter.setupDirs(); await DB.load(); renderAll(); closeModal('modal-settings'); toast('已切换文件夹'); } } }
+async function deleteChild(id) { if (!FSAdapter.isAvailable && !(await connectAndStart())) return; if (confirm('确定删除这个孩子档案吗？')) { if (await DB.removeChild(id)) { renderChildrenList(); renderAll(); toast('已删除'); } else toast('至少保留一个孩子档案'); } }
+async function viewMedia(mediaId, caption, type = 'image') { const container = document.getElementById('viewer-container'); const closeBtn = `<button onclick="closeModal('modal-image-viewer')" class="absolute -top-12 right-0 text-white p-2 hover:opacity-70"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`; const url = await getMediaUrl(mediaId); if (!url) { toast("无法加载"); return; } const safeUrl = escapeHtml(url); const safeCaption = escapeHtml(caption || ''); if (type === 'video') container.innerHTML = `${closeBtn}<video src="${safeUrl}" controls autoplay class="w-full rounded-2xl max-h-[80vh]"></video><div class="text-white mt-4 text-center">${safeCaption}</div>`; else container.innerHTML = `${closeBtn}<img src="${safeUrl}" class="w-full rounded-2xl max-h-[80vh] object-contain"><div class="text-white mt-4 text-center">${safeCaption}</div>`; openModal('modal-image-viewer'); }
+async function changeFolder() { const connected = await FSAdapter.connectNewFolder(); if (!connected) return false; const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('需要授权文件夹读写权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); closeModal('modal-settings'); toast('已切换文件夹'); return true; }
 async function handleRecordSubmit(e) { e.preventDefault(); const formData = new FormData(e.target); const recordData = { type: currentType, date: formData.get('date'), title: formData.get('title'), content: formData.get('content') || '' }; if (currentType === 'measurement') recordData.measurements = { height: parseFloat(formData.get('height')) || null, weight: parseFloat(formData.get('weight')) || null, head: parseFloat(formData.get('head')) || null }; const oldR = editingRecordId ? DB.data.records.find(r => r.id === editingRecordId) : null; const oldMediaId = oldR ? oldR.mediaId : null; if (currentMediaBlob) { try { const ext = currentMediaType === 'video' ? 'mp4' : 'jpg'; let blob = currentMediaBlob; if (currentMediaType === 'image') blob = await compressImage(currentMediaBlob, 1920, 0.85); const fn = await FSAdapter.saveMedia(blob, ext); recordData.mediaId = fn; recordData.mediaType = currentMediaType; } catch (err) { toast("保存失败"); return; } } else if (oldR && oldR.mediaId) { recordData.mediaId = oldR.mediaId; recordData.mediaType = oldR.mediaType; } if (editingRecordId) { await DB.updateRecord(editingRecordId, recordData, oldMediaId); toast('记录已更新'); } else { await DB.addRecord(recordData); toast('记录已保存'); } closeModal('modal-record'); editingRecordId = null; renderAll(); }
-function handleChildSubmit(e) { e.preventDefault(); const formData = new FormData(e.target); const data = { nickname: formData.get('nickname'), name: formData.get('name'), birthdate: formData.get('birthdate'), gender: formData.get('gender') }; const id = formData.get('rec_id'); if (id) { DB.updateChild(id, data); toast('已更新'); } else { DB.addChild(data); toast('已添加'); } closeModal('modal-child'); renderChildrenList(); renderAll(); }
-async function connectAndStart() { const connected = await FSAdapter.connectNewFolder(); if (connected) { const hasPerm = await FSAdapter.verifyPermission(); if (hasPerm) { await FSAdapter.setupDirs(); await DB.load(); renderAll(); document.getElementById('welcome-screen').classList.remove('active'); } else toast("需要授权权限"); } }
-async function grantPermission() { const hasPerm = await FSAdapter.verifyPermission(); if (hasPerm) { await FSAdapter.setupDirs(); await DB.load(); renderAll(); document.getElementById('permission-banner').style.display = 'none'; } }
+async function handleChildSubmit(e) { e.preventDefault(); if (!FSAdapter.isAvailable && !(await connectAndStart())) return; const formData = new FormData(e.target); const data = { nickname: formData.get('nickname'), name: formData.get('name'), birthdate: formData.get('birthdate'), gender: formData.get('gender') }; const id = formData.get('rec_id'); if (id) { await DB.updateChild(id, data); toast('已更新'); } else { await DB.addChild(data); toast('已添加'); } closeModal('modal-child'); renderChildrenList(); renderAll(); }
+async function connectAndStart() { if (!window.showDirectoryPicker) { setStorageMode(false, '当前浏览器不支持直接保存到文件夹。请使用电脑端 Chrome 或 Edge；示例内容仍可浏览。'); toast('请使用电脑端 Chrome 或 Edge 连接文件夹'); return false; } const connected = await FSAdapter.connectNewFolder(); if (!connected) return false; const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('需要授权文件夹读写权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); document.getElementById('permission-banner').style.display = 'none'; toast('已连接，今后的记录会保存到这个文件夹'); return true; }
+async function grantPermission() { const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('未获得文件夹权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); document.getElementById('permission-banner').style.display = 'none'; return true; }
 function exportData() { if (!DB.data) return; const data = JSON.stringify(DB.data, null, 2); const blob = new Blob([data], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `成长志-${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); toast('已下载备份'); }
-async function importJSON(event) { const file = event.target.files[0]; if (!file) return; try { const text = await file.text(); const importedData = JSON.parse(text); if (!importedData || !Array.isArray(importedData.records)) { toast("格式不正确"); return; } if (importedData.children) importedData.children.forEach(c => { if (!DB.data.children.find(e => e.id === c.id)) DB.data.children.push(c); }); let count = 0; importedData.records.forEach(r => { if (!DB.data.records.find(e => e.id === r.id)) { if (r.mediaId && r.mediaId.startsWith('data:image')) r.mediaId = null; DB.data.records.push(r); count++; } }); if (importedData.milestones) importedData.milestones.forEach(m => { if (!DB.data.milestones.find(e => e.id === m.id)) DB.data.milestones.push(m); }); await DB.save(); renderAll(); closeModal('modal-settings'); toast(`已导入 ${count} 条记录`); } catch (err) { toast("导入失败"); } }
-async function scanAndImportMedia() { toast("扫描中..."); try { let count = 0; for await (const entry of FSAdapter.rootDir.values()) { if (entry.kind === 'file') { const file = await entry.getFile(); const fn = file.name.toLowerCase(); const isMedia = fn.match(/\.(jpg|jpeg|png|gif|mp4|mov|avi|webm)$/); if (entry.name === 'db.json' || !isMedia) continue; const newId = await FSAdapter.moveMediaToFolder(entry); const isVideo = fn.match(/\.(mp4|mov|avi|webm)$/); DB.data.records.push({ id: 'r' + Date.now() + Math.random().toString(36).substr(2, 5), childId: DB.data.activeChildId, type: 'photo', date: new Date(file.lastModified).toISOString().slice(0, 10), title: entry.name.replace(/\.[^/.]+$/, ""), content: '自动导入', mediaId: newId, mediaType: isVideo ? 'video' : 'image' }); count++; } } if (count > 0) { await DB.save(); renderAll(); toast(`已导入 ${count} 个文件`); } else toast("未发现可导入文件"); closeModal('modal-settings'); } catch (err) { toast("扫描失败"); } }
+async function importJSON(event) { const file = event.target.files[0]; if (!file) return; if (!FSAdapter.isAvailable) { event.target.value = ''; toast('请先连接存储文件夹，再导入备份'); return; } try { const text = await file.text(); const importedData = JSON.parse(text); if (!importedData || !Array.isArray(importedData.records)) { toast("格式不正确"); return; } if (importedData.children) importedData.children.forEach(c => { if (!DB.data.children.find(e => e.id === c.id)) DB.data.children.push(c); }); let count = 0; importedData.records.forEach(r => { if (!DB.data.records.find(e => e.id === r.id)) { if (r.mediaId && r.mediaId.startsWith('data:image')) r.mediaId = null; DB.data.records.push(r); count++; } }); if (importedData.milestones) importedData.milestones.forEach(m => { if (!DB.data.milestones.find(e => e.id === m.id)) DB.data.milestones.push(m); }); await DB.save(); renderAll(); closeModal('modal-settings'); toast(`已导入 ${count} 条记录`); } catch (err) { toast("导入失败"); } }
+async function scanAndImportMedia() {
+  if (!FSAdapter.isAvailable && !(await connectAndStart())) return;
+  toast('正在扫描...');
+  try {
+    const imported = new Set(DB.data.importedMedia || []);
+    const candidates = [];
+    let skipped = 0;
+    for await (const entry of FSAdapter.rootDir.values()) {
+      if (entry.kind !== 'file' || entry.name === 'db.json') continue;
+      const file = await entry.getFile();
+      const fileName = file.name.toLowerCase();
+      if (!/\.(jpg|jpeg|png|gif|mp4|mov|avi|webm)$/.test(fileName)) continue;
+      const fingerprint = `${fileName}|${file.size}|${file.lastModified}`;
+      if (imported.has(fingerprint)) { skipped++; continue; }
+      candidates.push({ entry, file, fingerprint, isVideo: /\.(mp4|mov|avi|webm)$/.test(fileName) });
+    }
+    if (!candidates.length) { toast(skipped ? `没有新文件，已跳过 ${skipped} 个重复文件` : '未发现可导入文件'); return; }
+    const duplicateNote = skipped ? `，另有 ${skipped} 个重复文件会跳过` : '';
+    if (!confirm(`发现 ${candidates.length} 个新文件${duplicateNote}。将复制到 media 文件夹，原文件会保留。是否继续？`)) return;
+    for (const item of candidates) {
+      const newId = await FSAdapter.copyMediaToFolder(item.entry);
+      DB.data.records.push({ id: 'r' + Date.now() + Math.random().toString(36).slice(2, 7), childId: DB.data.activeChildId, type: 'photo', date: new Date(item.file.lastModified).toISOString().slice(0, 10), title: item.file.name.replace(/\.[^/.]+$/, ''), content: '自动导入', mediaId: newId, mediaType: item.isVideo ? 'video' : 'image', sourceFingerprint: item.fingerprint });
+      DB.data.importedMedia.push(item.fingerprint);
+    }
+    await DB.save(); renderAll(); closeModal('modal-settings');
+    toast(`已复制导入 ${candidates.length} 个文件${skipped ? `，跳过 ${skipped} 个重复文件` : ''}`);
+  } catch (err) { console.error(err); toast('扫描或复制失败'); }
+}
 
 function bindEvents() {
   const tc = document.getElementById('timeline-container');
@@ -716,10 +763,12 @@ function bindEvents() {
 async function initApp() {
   bindEvents();
   try {
-    if (!window.showDirectoryPicker) { document.getElementById('unsupported-banner').style.display = 'flex'; return; }
+    DB.data = DB.getDemoData();
+    renderAll();
+    setStorageMode(false, '当前是示例体验模式。连接文件夹后，你新增的记录、照片和备份才会真正保存。');
+    if (!window.showDirectoryPicker) { setStorageMode(false, '当前浏览器不支持直接保存到文件夹。请使用电脑端 Chrome 或 Edge；示例内容仍可浏览。'); return; }
     const hasSavedHandle = await FSAdapter.init();
-    if (hasSavedHandle) { const perm = await FSAdapter.rootDir.queryPermission({ mode: 'readwrite' }); if (perm === 'granted') { await FSAdapter.verifyPermission(); await FSAdapter.setupDirs(); await DB.load(); renderAll(); } else document.getElementById('permission-banner').style.display = 'block'; }
-    else document.getElementById('welcome-screen').classList.add('active');
+    if (hasSavedHandle) { const perm = await FSAdapter.rootDir.queryPermission({ mode: 'readwrite' }); if (perm === 'granted') { await FSAdapter.verifyPermission(); await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); } else document.getElementById('permission-banner').style.display = 'block'; }
     if ('IntersectionObserver' in window) { const obs = new IntersectionObserver((entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }), { threshold: 0.1 }); document.querySelectorAll('.reveal').forEach(el => obs.observe(el)); } else document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
   } catch (err) { console.error("初始化错误:", err); toast("初始化失败，请刷新重试"); }
 }
