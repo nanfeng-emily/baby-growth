@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>成长志 · 记录每一个珍贵的瞬间</title>
+<title>成长拾光 · 记录每一个珍贵的瞬间</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -230,10 +230,14 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
       <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, var(--accent), var(--pink));">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-8-4.5-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6.5-8 11-8 11z"/></svg>
       </div>
-      <div><div class="font-serif font-bold text-lg leading-none">成长志</div><div id="storage-status" class="text-xs" style="color: var(--muted);">示例体验模式</div></div>
+      <div><div class="font-serif font-bold text-lg leading-none">成长拾光</div><div id="storage-status" class="text-xs" style="color: var(--muted);">示例体验模式</div></div>
     </div>
     <div id="child-selector" class="child-selector hidden md:flex"></div>
     <div class="flex items-center gap-2">
+      <button class="btn-ghost flex items-center gap-1.5" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="回到顶部" title="回到顶部">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+        <span class="hidden lg:inline">顶部</span>
+      </button>
       <button class="btn-ghost hidden sm:flex items-center gap-1.5" onclick="openSettings()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         设置
@@ -267,8 +271,9 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
           <h1 class="font-serif font-bold leading-[0.95] tracking-tight mb-6" style="font-size: clamp(48px, 7vw, 88px);">记录每一个<br><span style="color: var(--accent);">珍贵的</span>瞬间</h1>
           <p class="text-lg leading-relaxed max-w-xl mb-8" style="color: var(--fg-soft);">孩子的成长转瞬即逝。从第一次微笑到第一步路，从牙牙学语到蹒跚前行，把那些值得珍藏一辈子的时刻，温柔地记录下来。</p>
           <div class="flex flex-wrap gap-3">
-            <button class="btn-primary" onclick="openRecordModal()">添加新记录</button>
+            <button class="btn-primary" onclick="document.getElementById('growth-section').scrollIntoView({behavior:'smooth'})">成长曲线</button>
             <button class="btn-secondary" onclick="document.getElementById('gallery-section').scrollIntoView({behavior:'smooth'})">浏览照片墙</button>
+            <button class="btn-secondary" onclick="document.getElementById('milestones-section').scrollIntoView({behavior:'smooth'})">成就里程碑</button>
           </div>
         </div>
         <div class="lg:col-span-2">
@@ -360,7 +365,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
   
   <footer class="border-t" style="border-color: var(--border-soft);">
     <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm" style="color: var(--muted);">
-      <div class="flex items-center gap-2"><span>成长志 · 数据直接存于您选定的文件夹中</span></div>
+      <div class="flex items-center gap-2"><span>成长拾光 · 数据直接存于您选定的文件夹中</span></div>
     </div>
   </footer>
 </main>
@@ -1144,6 +1149,17 @@ async function saveCropAdjustment() {
   toast('这张照片的裁剪位置已保存');
 }
 
+function getPrintableRecordTitle(record) {
+  const title = String(record?.title || '').trim();
+  if (!title || record?.content === '自动导入' || /^media[_-]/i.test(title)) return '';
+  return title;
+}
+
+function getPrintableRecordContent(record) {
+  const content = String(record?.content || '').trim();
+  return content === '自动导入' ? '' : content;
+}
+
 async function buildPhotoProject() {
   const records = getPrintablePhotoRecords().filter(r => projectSelection.has(r.id)).reverse();
   if (!records.length) { toast('请至少选择一张照片'); return; }
@@ -1171,9 +1187,11 @@ async function buildPhotoProject() {
   } else if (currentProjectType === 'frame') {
     html = photos.map(({ record, url }) => {
       const photoMarkup = cropFrameMarkup(`frame:${record.id}`, url, 'print-photo'); const date = escapeHtml(formatDate(record.date));
-      if (currentProjectTemplate === 'frame-polaroid') return `<section class="print-page frame-polaroid"><div class="frame-polaroid-card">${photoMarkup}<div class="font-serif text-2xl mt-5">${date}</div><div class="text-sm mt-2" style="color:#786f65;">${childName} · 成长手记</div></div></section>`;
-      if (currentProjectTemplate === 'frame-poster') return `<section class="print-page frame-poster">${photoMarkup}<div class="frame-poster-copy"><div class="text-sm tracking-widest">${date}</div><div class="font-serif text-4xl font-bold mt-2">${childName}的珍贵时刻</div></div></section>`;
-      return `<section class="print-page"><div class="frame-mat">${photoMarkup}</div><div class="text-center mt-5"><div class="font-serif text-2xl">${childName}的珍贵时刻</div><div class="text-sm mt-2" style="color:#786f65;">${date}</div></div></section>`;
+      const content = getPrintableRecordContent(record);
+      const contentMarkup = content ? `<div class="text-sm mt-2" style="color:#786f65;white-space:pre-wrap;">${escapeHtml(content)}</div>` : '';
+      if (currentProjectTemplate === 'frame-polaroid') return `<section class="print-page frame-polaroid"><div class="frame-polaroid-card">${photoMarkup}<div class="font-serif text-2xl mt-5">${date}</div>${contentMarkup}</div></section>`;
+      if (currentProjectTemplate === 'frame-poster') return `<section class="print-page frame-poster">${photoMarkup}<div class="frame-poster-copy"><div class="text-sm tracking-widest">${date}</div>${content ? `<div class="font-serif text-2xl font-bold mt-2" style="white-space:pre-wrap;">${escapeHtml(content)}</div>` : ''}</div></section>`;
+      return `<section class="print-page"><div class="frame-mat">${photoMarkup}</div><div class="text-center mt-5">${content ? `<div class="font-serif text-xl" style="white-space:pre-wrap;">${escapeHtml(content)}</div>` : ''}<div class="text-sm mt-2" style="color:#786f65;">${date}</div></div></section>`;
     }).join('');
   } else {
     const photoById = new Map(photos.map(photo => [photo.record.id, photo]));
@@ -1185,11 +1203,13 @@ async function buildPhotoProject() {
     const cover = `<section class="print-page book-cover" ${coverTone}><div class="text-sm tracking-widest mb-5" style="color:#D67D3E;">GROWING UP</div><h1 class="font-serif text-5xl font-bold">${childName}的成长书</h1><p class="mt-5" style="opacity:.68;">把每一个平凡又闪亮的日子，装订成爱。</p></section>`;
     const pages = arrangedPages.map((page, pageIndex) => {
       const firstRecord = page.photos[0].record;
-      const figures = page.photos.map(({ record, url }, slotIndex) => `<figure>${cropFrameMarkup(`book:${page.id}:${slotIndex}:${record.id}`, url)}<figcaption>${escapeHtml(formatDate(record.date))}${page.layout === 1 && record.content ? ` · ${escapeHtml(record.content)}` : ''}</figcaption></figure>`).join('');
+      const pageTitle = getPrintableRecordTitle(firstRecord);
+      const pageTitleMarkup = pageTitle ? `<h2 class="font-serif text-3xl font-bold mt-2">${escapeHtml(pageTitle)}</h2>` : '';
+      const figures = page.photos.map(({ record, url }, slotIndex) => { const content = getPrintableRecordContent(record); return `<figure>${cropFrameMarkup(`book:${page.id}:${slotIndex}:${record.id}`, url)}<figcaption>${escapeHtml(formatDate(record.date))}${page.layout === 1 && content ? ` · ${escapeHtml(content)}` : ''}</figcaption></figure>`; }).join('');
       const grid = `<div class="book-layout-grid layout-${page.layout}">${figures}</div>`;
-      if (currentProjectTemplate === 'book-magazine') return `<section class="print-page book-page-magazine"><div class="flex items-end justify-between mb-5"><div><div class="text-xs tracking-widest" style="color:#A56B58;">STORY ${String(pageIndex + 1).padStart(2, '0')}</div><h2 class="font-serif text-4xl font-bold mt-2">${escapeHtml(firstRecord.title || '成长时刻')}</h2></div><div class="text-sm">${childName}</div></div>${grid}</section>`;
+      if (currentProjectTemplate === 'book-magazine') return `<section class="print-page book-page-magazine"><div class="flex items-end justify-between mb-5"><div><div class="text-xs tracking-widest" style="color:#A56B58;">STORY ${String(pageIndex + 1).padStart(2, '0')}</div>${pageTitle ? `<h2 class="font-serif text-4xl font-bold mt-2">${escapeHtml(pageTitle)}</h2>` : ''}</div><div class="text-sm">${childName}</div></div>${grid}</section>`;
       if (currentProjectTemplate === 'book-mosaic') return `<section class="print-page book-page-mosaic"><div class="flex items-end justify-between mb-6"><div><div class="text-xs tracking-widest" style="color:#6B8E5A;">CHAPTER ${String(pageIndex + 1).padStart(2, '0')}</div><h2 class="font-serif text-3xl font-bold mt-2">一起长大的日子</h2></div><div class="text-sm" style="color:#786f65;">${childName}</div></div>${grid}</section>`;
-      return `<section class="print-page"><div class="mb-5"><div class="text-sm" style="color:#A56B58;">第 ${pageIndex + 1} 页 · ${escapeHtml(formatDate(firstRecord.date))}</div><h2 class="font-serif text-3xl font-bold mt-2">${escapeHtml(firstRecord.title || '成长时刻')}</h2></div>${grid}</section>`;
+      return `<section class="print-page"><div class="mb-5"><div class="text-sm" style="color:#A56B58;">第 ${pageIndex + 1} 页 · ${escapeHtml(formatDate(firstRecord.date))}</div>${pageTitleMarkup}</div>${grid}</section>`;
     }).join('');
     html = cover + pages;
   }
@@ -1342,7 +1362,7 @@ async function handleRecordSubmit(e) { e.preventDefault(); const formData = new 
 async function handleChildSubmit(e) { e.preventDefault(); if (!FSAdapter.isAvailable && !(await connectAndStart())) return; const formData = new FormData(e.target); const data = { nickname: formData.get('nickname'), name: formData.get('name'), birthdate: formData.get('birthdate'), gender: formData.get('gender') }; const id = formData.get('rec_id'); if (id) { await DB.updateChild(id, data); toast('已更新'); } else { await DB.addChild(data); toast('已添加'); } closeModal('modal-child'); renderChildrenList(); renderAll(); }
 async function connectAndStart() { if (!window.showDirectoryPicker) { setStorageMode(false, '当前浏览器不支持直接保存到文件夹。请使用电脑端 Chrome 或 Edge；示例内容仍可浏览。'); toast('请使用电脑端 Chrome 或 Edge 连接文件夹'); return false; } const connected = await FSAdapter.connectNewFolder(); if (!connected) return false; const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('需要授权文件夹读写权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); document.getElementById('permission-banner').style.display = 'none'; toast('已连接，今后的记录会保存到这个文件夹'); return true; }
 async function grantPermission() { const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('未获得文件夹权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); document.getElementById('permission-banner').style.display = 'none'; return true; }
-function exportData() { if (!DB.data) return; const data = JSON.stringify(DB.data, null, 2); const blob = new Blob([data], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `成长志-${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); toast('已下载备份'); }
+function exportData() { if (!DB.data) return; const data = JSON.stringify(DB.data, null, 2); const blob = new Blob([data], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `成长拾光-${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); toast('已下载备份'); }
 async function importJSON(event) { const file = event.target.files[0]; if (!file) return; if (!FSAdapter.isAvailable) { event.target.value = ''; toast('请先连接存储文件夹，再导入备份'); return; } try { const text = await file.text(); const importedData = JSON.parse(text); if (!importedData || !Array.isArray(importedData.records)) { toast("格式不正确"); return; } if (importedData.children) importedData.children.forEach(c => { if (!DB.data.children.find(e => e.id === c.id)) DB.data.children.push(c); }); let count = 0; importedData.records.forEach(r => { if (!DB.data.records.find(e => e.id === r.id)) { if (r.mediaId && r.mediaId.startsWith('data:image')) r.mediaId = null; DB.data.records.push(r); count++; } }); if (importedData.milestones) importedData.milestones.forEach(m => { if (!DB.data.milestones.find(e => e.id === m.id)) DB.data.milestones.push(m); }); await DB.save(); renderAll(); closeModal('modal-settings'); toast(`已导入 ${count} 条记录`); } catch (err) { toast("导入失败"); } }
 async function scanAndImportMedia() {
   if (!FSAdapter.isAvailable && !(await connectAndStart())) return;
