@@ -555,7 +555,9 @@ const MILESTONES = [
   { id: 'ride_tricycle', name: '骑三轮车', icon: '🚲', defaultAge: '36-48月' }
 ];
 
+// ==========================================
 // WS/T 423—2022《7岁以下儿童生长标准》参考数据
+// ==========================================
 const STANDARDS = {
   boy: {
     height: {
@@ -1066,15 +1068,33 @@ function renderGrowthChart() {
     </div>
     <div class="mt-3 pt-3 border-t text-xs" style="border-color: var(--border-soft); color: var(--muted);">${formatDate(last.date)}</div>`;
   
+  // 计算与上次测量的对比趋势
   if (measurements.length >= 2) {
-    const first = measurements[0], lastM = measurements[measurements.length - 1];
+    const lastM = measurements[measurements.length - 1];
+    const prevM = measurements[measurements.length - 2];
     const metricName = currentMetric === 'height' ? '身高' : (currentMetric === 'weight' ? '体重' : '头围');
     const unit = currentMetric === 'weight' ? 'kg' : 'cm';
+    
+    const diff = (lastM.measurements[currentMetric] || 0) - (prevM.measurements[currentMetric] || 0);
+    const monthsDiff = calcMonths(child.birthdate, lastM.date) - calcMonths(child.birthdate, prevM.date);
+    const daysDiff = Math.round((new Date(lastM.date) - new Date(prevM.date)) / (1000 * 60 * 60 * 24));
+    
+    let timeStr = '上次测量';
+    if (monthsDiff > 0) {
+      timeStr = `${monthsDiff}个月前`;
+    } else if (daysDiff > 0) {
+      timeStr = `${daysDiff}天前`;
+    }
+
+    document.getElementById('growth-trend').innerHTML = `
+      <div class="text-xs font-semibold tracking-wider mb-3" style="color: var(--muted);">增长趋势 (对比${timeStr})</div>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span style="color: var(--muted);">${metricName}增长</span><span class="font-semibold" style="color: var(--sage);">+${diff.toFixed(1)} ${unit}</span></div>
+      </div>`;
+  } else {
     document.getElementById('growth-trend').innerHTML = `
       <div class="text-xs font-semibold tracking-wider mb-3" style="color: var(--muted);">增长趋势</div>
-      <div class="space-y-2 text-sm">
-        <div class="flex justify-between"><span style="color: var(--muted);">${metricName}增长</span><span class="font-semibold" style="color: var(--sage);">+${(lastM.measurements[currentMetric] || 0) - (first.measurements[currentMetric] || 0)} ${unit}</span></div>
-      </div>`;
+      <p class="text-sm" style="color: var(--muted);">需要至少 2 次测量记录才能看到趋势</p>`;
   }
 }
 
