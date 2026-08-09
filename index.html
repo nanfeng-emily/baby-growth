@@ -82,9 +82,10 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 .gallery-item { break-inside: avoid; margin-bottom: 16px; border-radius: 14px; overflow: hidden; cursor: pointer; position: relative; transition: transform 0.3s; }
 .gallery-item:hover { transform: scale(1.02); }
 .gallery-item img, .gallery-item video { width: 100%; height: auto; display: block; }
-.gallery-item .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(45,42,38,0.85), transparent 60%); opacity: 0; transition: opacity 0.3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 14px; color: white; pointer-events: none; }
+.gallery-item .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(45,42,38,0.9), rgba(45,42,38,0.2) 50%, transparent 80%); opacity: 0; transition: opacity 0.3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 14px; color: white; pointer-events: none; }
 .gallery-item:hover .overlay { opacity: 1; }
 .gallery-item .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.text-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
@@ -192,7 +193,6 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
     <div id="stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
   </section>
   
-  <!-- 1. 照片墙 (最前) -->
   <section id="gallery-section" class="py-20 md:py-28" style="background: var(--bg-2);">
     <div class="max-w-7xl mx-auto px-6">
       <div class="mb-12 reveal">
@@ -204,7 +204,6 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
     </div>
   </section>
   
-  <!-- 2. 成长曲线 (第二) -->
   <section id="growth-section" class="py-20 md:py-28">
     <div class="max-w-7xl mx-auto px-6">
       <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 reveal">
@@ -231,7 +230,6 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
     </div>
   </section>
   
-  <!-- 3. 成就里程碑 (第三) -->
   <section id="milestones-section" class="py-20 md:py-28" style="background: var(--bg-2);">
     <div class="max-w-7xl mx-auto px-6">
       <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 reveal">
@@ -246,7 +244,6 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
     </div>
   </section>
   
-  <!-- 4. 成长时间线 (最后) -->
   <section id="timeline-section" class="max-w-7xl mx-auto px-6 py-20 md:py-28">
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 reveal">
       <div>
@@ -271,7 +268,6 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
   </footer>
 </main>
 
-<!-- 添加/编辑记录 -->
 <div id="modal-record" class="modal-overlay">
   <div class="modal-content">
     <div class="p-6 border-b flex items-center justify-between" style="border-color: var(--border-soft);">
@@ -318,7 +314,6 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
   </div>
 </div>
 
-<!-- 添加/编辑里程碑 -->
 <div id="modal-milestone" class="modal-overlay">
   <div class="modal-content">
     <div class="p-6 border-b flex items-center justify-between" style="border-color: var(--border-soft);">
@@ -578,8 +573,27 @@ function renderGallery() {
   empty.classList.add('hidden');
   grid.innerHTML = records.map(r => {
     const st = r.title.replace(/'/g, "\\'");
-    if (r.mediaType === 'video') return `<div class="gallery-item" onclick="viewMedia('${r.mediaId}', '${st}', 'video')"><video data-media-id="${r.mediaId}" preload="metadata"></video><div class="play-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div><div class="overlay"><div class="text-xs opacity-80">${formatDate(r.date)}</div><div class="font-medium text-sm">${r.title}</div></div></div>`;
-    return `<div class="gallery-item" onclick="viewMedia('${r.mediaId}', '${st}', 'image')"><img data-media-id="${r.mediaId}" alt="${r.title}"><div class="overlay"><div class="text-xs opacity-80">${formatDate(r.date)}</div><div class="font-medium text-sm">${r.title}</div></div></div>`;
+    const safeContent = (r.content || '').replace(/\n/g, ' ').trim();
+    const contentHtml = safeContent ? `<div class="text-xs mt-1 opacity-90 text-clamp-2">${safeContent}</div>` : '';
+    if (r.mediaType === 'video') {
+      return `<div class="gallery-item" onclick="viewMedia('${r.mediaId}', '${st}', 'video')">
+        <video data-media-id="${r.mediaId}" preload="metadata"></video>
+        <div class="play-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>
+        <div class="overlay">
+          <div class="text-xs opacity-80">${formatDate(r.date)}</div>
+          <div class="font-medium text-sm">${r.title}</div>
+          ${contentHtml}
+        </div>
+      </div>`;
+    }
+    return `<div class="gallery-item" onclick="viewMedia('${r.mediaId}', '${st}', 'image')">
+      <img data-media-id="${r.mediaId}" alt="${r.title}">
+      <div class="overlay">
+        <div class="text-xs opacity-80">${formatDate(r.date)}</div>
+        <div class="font-medium text-sm">${r.title}</div>
+        ${contentHtml}
+      </div>
+    </div>`;
   }).join('');
   loadMediaElements();
 }
