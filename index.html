@@ -6,6 +6,7 @@
 <title>成长拾光 · 记录每一个珍贵的瞬间</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -473,7 +474,8 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
           <button onclick="exportData()" class="btn-secondary justify-center w-full">下载并备份文字数据(JSON)</button>
           <input type="file" id="import-json-input" accept=".json" hidden onchange="importJSON(event)">
           <button onclick="document.getElementById('import-json-input').click()" class="btn-secondary justify-center w-full">导入旧版日记文字(JSON)</button>
-          <button onclick="scanAndImportMedia()" class="btn-secondary justify-center w-full">复制导入散落的照片/视频</button>
+          <button onclick="scanAndImportMedia()" class="btn-secondary justify-center w-full">扫描并导入照片/视频</button>
+          <p class="text-xs leading-relaxed px-1" style="color: var(--text-muted);">会扫描所选文件夹根目录及 media 子文件夹；HEIC/HEIF 照片会自动转换为 JPG，原文件保留。</p>
           <button onclick="changeFolder()" class="btn-secondary justify-center w-full">更换存储文件夹</button>
         </div>
       </div>
@@ -1364,33 +1366,126 @@ async function connectAndStart() { if (!window.showDirectoryPicker) { setStorage
 async function grantPermission() { const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('未获得文件夹权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); document.getElementById('permission-banner').style.display = 'none'; return true; }
 function exportData() { if (!DB.data) return; const data = JSON.stringify(DB.data, null, 2); const blob = new Blob([data], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `成长拾光-${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); toast('已下载备份'); }
 async function importJSON(event) { const file = event.target.files[0]; if (!file) return; if (!FSAdapter.isAvailable) { event.target.value = ''; toast('请先连接存储文件夹，再导入备份'); return; } try { const text = await file.text(); const importedData = JSON.parse(text); if (!importedData || !Array.isArray(importedData.records)) { toast("格式不正确"); return; } if (importedData.children) importedData.children.forEach(c => { if (!DB.data.children.find(e => e.id === c.id)) DB.data.children.push(c); }); let count = 0; importedData.records.forEach(r => { if (!DB.data.records.find(e => e.id === r.id)) { if (r.mediaId && r.mediaId.startsWith('data:image')) r.mediaId = null; DB.data.records.push(r); count++; } }); if (importedData.milestones) importedData.milestones.forEach(m => { if (!DB.data.milestones.find(e => e.id === m.id)) DB.data.milestones.push(m); }); await DB.save(); renderAll(); closeModal('modal-settings'); toast(`已导入 ${count} 条记录`); } catch (err) { toast("导入失败"); } }
+function classifyImportFile(fileName) {
+  const name = fileName.toLowerCase();
+  if (/\.(crdownload|part|tmp|download|qkdownload)$/.test(name)) return 'incomplete';
+  if (/\.(heic|heif)$/.test(name)) return 'heic';
+  if (/\.(jpg|jpeg|png|gif|webp)$/.test(name)) return 'image';
+  if (/\.(mp4|mov|avi|webm|m4v)$/.test(name)) return 'video';
+  return 'unsupported';
+}
+
+function buildImportScanSummary(candidates, stats) {
+  const photos = candidates.filter(item => item.kind === 'image' || item.kind === 'heic').length;
+  const heicPhotos = candidates.filter(item => item.kind === 'heic').length;
+  const videos = candidates.filter(item => item.kind === 'video').length;
+  const linked = candidates.filter(item => item.location === 'media').length;
+  const copied = candidates.length - linked;
+  const lines = [
+    `发现可导入：${photos} 张照片、${videos} 个视频${heicPhotos ? `（其中 ${heicPhotos} 张 HEIC/HEIF 将转为 JPG）` : ''}`,
+    `文件位置：根目录 ${copied} 个、media 文件夹 ${linked} 个`
+  ];
+  const skipped = [];
+  if (stats.duplicates) skipped.push(`${stats.duplicates} 个已导入或已关联`);
+  if (stats.zeroBytes) skipped.push(`${stats.zeroBytes} 个 0KB 空文件`);
+  if (stats.incomplete) skipped.push(`${stats.incomplete} 个未完成下载文件`);
+  if (stats.unsupported) skipped.push(`${stats.unsupported} 个不支持的其他文件`);
+  if (skipped.length) lines.push(`本次跳过：${skipped.join('、')}`);
+  return lines.join('\n');
+}
+
 async function scanAndImportMedia() {
   if (!FSAdapter.isAvailable && !(await connectAndStart())) return;
-  toast('正在扫描...');
+  toast('正在扫描根目录和 media 文件夹...');
   try {
+    await FSAdapter.setupDirs();
     const imported = new Set(DB.data.importedMedia || []);
+    const seenFingerprints = new Set(imported);
+    const referencedMediaIds = new Set((DB.data.records || []).map(record => record.mediaId).filter(Boolean));
     const candidates = [];
-    let skipped = 0;
-    for await (const entry of FSAdapter.rootDir.values()) {
-      if (entry.kind !== 'file' || entry.name === 'db.json') continue;
-      const file = await entry.getFile();
-      const fileName = file.name.toLowerCase();
-      if (!/\.(jpg|jpeg|png|gif|mp4|mov|avi|webm)$/.test(fileName)) continue;
-      const fingerprint = `${fileName}|${file.size}|${file.lastModified}`;
-      if (imported.has(fingerprint)) { skipped++; continue; }
-      candidates.push({ entry, file, fingerprint, isVideo: /\.(mp4|mov|avi|webm)$/.test(fileName) });
+    const stats = { duplicates: 0, heic: 0, zeroBytes: 0, incomplete: 0, unsupported: 0 };
+
+    const inspectDirectory = async (directory, location) => {
+      for await (const entry of directory.values()) {
+        if (entry.kind !== 'file' || (location === 'root' && entry.name === 'db.json')) continue;
+        const file = await entry.getFile();
+        const kind = classifyImportFile(file.name);
+        if (!file.size) { stats.zeroBytes++; continue; }
+        if (kind === 'incomplete') { stats.incomplete++; continue; }
+        if (kind === 'unsupported') { stats.unsupported++; continue; }
+        const fingerprint = `${file.name.toLowerCase()}|${file.size}|${file.lastModified}`;
+        if (seenFingerprints.has(fingerprint) || (location === 'media' && referencedMediaIds.has(entry.name))) {
+          stats.duplicates++;
+          continue;
+        }
+        seenFingerprints.add(fingerprint);
+        candidates.push({ entry, file, fingerprint, kind, location });
+      }
+    };
+
+    await inspectDirectory(FSAdapter.rootDir, 'root');
+    await inspectDirectory(FSAdapter.mediaDir, 'media');
+    const summary = buildImportScanSummary(candidates, stats);
+    if (!candidates.length) {
+      alert(`${summary}\n\n未发现可直接导入的新照片或视频。`);
+      return;
     }
-    if (!candidates.length) { toast(skipped ? `没有新文件，已跳过 ${skipped} 个重复文件` : '未发现可导入文件'); return; }
-    const duplicateNote = skipped ? `，另有 ${skipped} 个重复文件会跳过` : '';
-    if (!confirm(`发现 ${candidates.length} 个新文件${duplicateNote}。将复制到 media 文件夹，原文件会保留。是否继续？`)) return;
+    if (!confirm(`${summary}\n\n普通文件：根目录中的会复制到 media，media 中的只建立记录。\nHEIC/HEIF：自动生成 JPG 保存到 media。所有原文件均保留。是否继续？`)) return;
+
+    DB.data.importedMedia = DB.data.importedMedia || [];
+    let copiedCount = 0;
+    let linkedCount = 0;
+    let convertedCount = 0;
+    let failedCount = 0;
+    const failedFiles = [];
     for (const item of candidates) {
-      const newId = await FSAdapter.copyMediaToFolder(item.entry);
-      DB.data.records.push({ id: 'r' + Date.now() + Math.random().toString(36).slice(2, 7), childId: DB.data.activeChildId, type: 'photo', date: new Date(item.file.lastModified).toISOString().slice(0, 10), title: item.file.name.replace(/\.[^/.]+$/, ''), content: '自动导入', mediaId: newId, mediaType: item.isVideo ? 'video' : 'image', showInGallery: false, sourceFingerprint: item.fingerprint });
-      DB.data.importedMedia.push(item.fingerprint);
+      try {
+        let mediaId;
+        let mediaType = item.kind;
+        if (item.kind === 'heic') {
+          if (typeof heic2any !== 'function') throw new Error('HEIC 转换组件未加载，请检查网络后重试');
+          const conversion = await heic2any({ blob: item.file, toType: 'image/jpeg', quality: 0.9 });
+          const convertedBlob = Array.isArray(conversion) ? conversion[0] : conversion;
+          const optimizedBlob = await compressImage(convertedBlob, 2400, 0.9);
+          mediaId = await FSAdapter.saveMedia(optimizedBlob, 'jpg');
+          mediaType = 'image';
+          convertedCount++;
+        } else if (item.location === 'media') {
+          mediaId = item.entry.name;
+          linkedCount++;
+        } else {
+          mediaId = await FSAdapter.copyMediaToFolder(item.entry);
+          copiedCount++;
+        }
+        DB.data.records.push({
+          id: 'r' + Date.now() + Math.random().toString(36).slice(2, 7),
+          childId: DB.data.activeChildId,
+          type: 'photo',
+          date: new Date(item.file.lastModified).toISOString().slice(0, 10),
+          title: item.file.name.replace(/\.[^/.]+$/, ''),
+          content: '自动导入',
+          mediaId,
+          mediaType,
+          showInGallery: false,
+          sourceFingerprint: item.fingerprint
+        });
+        DB.data.importedMedia.push(item.fingerprint);
+      } catch (itemError) {
+        failedCount++;
+        failedFiles.push(item.file.name);
+        console.error(`导入失败：${item.file.name}`, itemError);
+      }
     }
-    await DB.save(); renderAll(); closeModal('modal-settings');
-    toast(`已复制导入 ${candidates.length} 个文件${skipped ? `，跳过 ${skipped} 个重复文件` : ''}`);
-  } catch (err) { console.error(err); toast('扫描或复制失败'); }
+    await DB.save();
+    renderAll();
+    closeModal('modal-settings');
+    const successCount = candidates.length - failedCount;
+    toast(`已导入 ${successCount} 个（复制 ${copiedCount}、关联 ${linkedCount}、HEIC 转 JPG ${convertedCount}）${failedCount ? `，失败 ${failedCount} 个` : ''}`);
+    if (failedFiles.length) alert(`有 ${failedFiles.length} 个文件转换或导入失败：\n${failedFiles.slice(0, 10).join('\n')}${failedFiles.length > 10 ? '\n……' : ''}\n\n原文件没有改动，可以检查网络后再次扫描。`);
+  } catch (err) {
+    console.error(err);
+    alert(`扫描或导入失败：${err && err.message ? err.message : '请重新连接文件夹后再试'}`);
+  }
 }
 
 function bindEvents() {
