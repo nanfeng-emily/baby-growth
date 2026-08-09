@@ -134,7 +134,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-8-4.5-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6.5-8 11-8 11z"/></svg>
     </div>
     <h2 class="font-serif text-3xl font-bold mb-4">欢迎使用成长志</h2>
-    <p class="mb-6" style="color: var(--muted);">为了实现多设备同步和永久存储，请选择您的<strong>夸克网盘同步盘文件夹</strong>（或其他任意文件夹）作为数据存储位置。</p>
+    <p class="mb-6" style="color: var(--muted);">为了实现多设备同步和永久存储，请选择您的<strong>网盘同步盘文件夹</strong>（或其他任意文件夹）作为数据存储位置。</p>
     <button onclick="connectAndStart()" class="btn-primary justify-center w-full">选择文件夹并开始</button>
     <p class="text-xs mt-4" style="color: var(--muted);">提示：请不要选择系统受保护的文件夹（如 C盘根目录）。</p>
   </div>
@@ -219,6 +219,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
         <div class="flex gap-1 p-1 rounded-full" style="background: var(--bg-3);">
           <button class="tab-btn active" data-metric="height" onclick="switchMetric('height')">身高</button>
           <button class="tab-btn" data-metric="weight" onclick="switchMetric('weight')">体重</button>
+          <button class="tab-btn" data-metric="head" onclick="switchMetric('head')">头围</button>
         </div>
       </div>
       <div class="grid lg:grid-cols-3 gap-6 reveal">
@@ -283,9 +284,10 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
       </div>
       <div><label>标题</label><input type="text" name="title" placeholder="给这个时刻起个名字..." required></div>
       <div id="content-field"><label>内容</label><textarea name="content" placeholder="记录下今天发生的故事..." rows="4"></textarea></div>
-      <div id="measurement-fields" class="hidden grid grid-cols-2 gap-4">
+      <div id="measurement-fields" class="hidden grid-cols-3 gap-4 grid">
         <div><label>身高</label><input type="number" name="height" placeholder="cm" step="0.1" min="0"></div>
         <div><label>体重</label><input type="number" name="weight" placeholder="kg" step="0.1" min="0"></div>
+        <div><label>头围</label><input type="number" name="head" placeholder="cm" step="0.1" min="0"></div>
       </div>
       <div>
         <label>照片 / 视频</label>
@@ -553,18 +555,18 @@ const MILESTONES = [
 const SAMPLE_CHILD = { id: 'c1', name: '小满', nickname: '满满', birthdate: '2022-03-15', gender: 'M', avatar: null };
 const SAMPLE_RECORDS = [
   { id: 'r1', childId: 'c1', type: 'milestone', date: '2022-03-15', title: '小满出生了', content: '今天 14:32，我们的宝贝降生。体重 3.4kg，身长 51cm。', mediaId: 'https://picsum.photos/seed/babybirth/800/600.jpg', mediaType: 'image', milestone: 'birth' },
-  { id: 'r2', childId: 'c1', type: 'measurement', date: '2022-03-15', title: '出生体检', content: '出生第一次体检，各项指标正常。', measurements: { height: 51, weight: 3.4 } },
+  { id: 'r2', childId: 'c1', type: 'measurement', date: '2022-03-15', title: '出生体检', content: '出生第一次体检，各项指标正常。', measurements: { height: 51, weight: 3.4, head: 35 } },
   { id: 'r3', childId: 'c1', type: 'milestone', date: '2022-04-15', title: '满月啦', content: '一个月过去了，体重增长了 1.2kg。', mediaId: 'https://picsum.photos/seed/babymonth/800/600.jpg', mediaType: 'image', milestone: 'first_smile' },
-  { id: 'r4', childId: 'c1', type: 'measurement', date: '2022-04-15', title: '满月体检', content: '满月体检，发育正常。', measurements: { height: 55, weight: 4.6 } },
+  { id: 'r4', childId: 'c1', type: 'measurement', date: '2022-04-15', title: '满月体检', content: '满月体检，发育正常。', measurements: { height: 55, weight: 4.6, head: 37 } },
   { id: 'r5', childId: 'c1', type: 'milestone', date: '2022-07-20', title: '会翻身了', content: '今天小满第一次自己翻身。', mediaId: 'https://picsum.photos/seed/babyroll/800/600.jpg', mediaType: 'image', milestone: 'roll_over' },
-  { id: 'r6', childId: 'c1', type: 'measurement', date: '2022-09-15', title: '6个月体检', content: '半岁体检一切正常。', measurements: { height: 68, weight: 8.2 } },
+  { id: 'r6', childId: 'c1', type: 'measurement', date: '2022-09-15', title: '6个月体检', content: '半岁体检一切正常。', measurements: { height: 68, weight: 8.2, head: 44 } },
   { id: 'r7', childId: 'c1', type: 'milestone', date: '2023-03-15', title: '一周岁生日', content: '今天是小满的一周岁生日！', mediaId: 'https://picsum.photos/seed/babybd1/800/600.jpg', mediaType: 'image', milestone: 'first_birthday' },
-  { id: 'r8', childId: 'c1', type: 'measurement', date: '2023-03-15', title: '一周岁体检', content: '一岁体检。', measurements: { height: 76, weight: 9.8 } },
+  { id: 'r8', childId: 'c1', type: 'measurement', date: '2023-03-15', title: '一周岁体检', content: '一岁体检。', measurements: { height: 76, weight: 9.8, head: 46 } },
   { id: 'r9', childId: 'c1', type: 'milestone', date: '2023-04-10', title: '第一次独立行走', content: '今天小满第一次独立走了 5 步！快来看视频！', mediaId: 'https://www.w3schools.com/html/mov_bbb.mp4', mediaType: 'video', milestone: 'first_walk' },
   { id: 'r10', childId: 'c1', type: 'diary', date: '2023-07-08', title: '公园玩耍', content: '今天带小满去公园。', mediaId: 'https://picsum.photos/seed/babypark/800/600.jpg', mediaType: 'image' },
-  { id: 'r11', childId: 'c1', type: 'measurement', date: '2023-09-15', title: '18个月体检', content: '18个月体检。', measurements: { height: 82, weight: 11.5 } },
+  { id: 'r11', childId: 'c1', type: 'measurement', date: '2023-09-15', title: '18个月体检', content: '18个月体检。', measurements: { height: 82, weight: 11.5, head: 47.5 } },
   { id: 'r12', childId: 'c1', type: 'milestone', date: '2024-02-10', title: '能说短句了', content: '今天小满说出了第一个完整短句："妈妈抱抱"。', milestone: 'short_sentence' },
-  { id: 'r13', childId: 'c1', type: 'measurement', date: '2024-03-15', title: '2岁体检', content: '2岁体检。', measurements: { height: 88, weight: 12.8 } },
+  { id: 'r13', childId: 'c1', type: 'measurement', date: '2024-03-15', title: '2岁体检', content: '2岁体检。', measurements: { height: 88, weight: 12.8, head: 48.5 } },
   { id: 'r14', childId: 'c1', type: 'photo', date: '2024-05-01', title: '第一次看海', content: '带小满去了海边。', mediaId: 'https://picsum.photos/seed/babybeach/800/600.jpg', mediaType: 'image' }
 ];
 
@@ -780,8 +782,8 @@ function renderStats() {
 
   document.getElementById('stats-grid').innerHTML = [
     { label: '陪伴天数', value: days, suffix: '' },
-    { label: '当前身高', value: lastM ? lastM.measurements.height : '--', suffix: lastM ? 'cm' : '' },
-    { label: '当前体重', value: lastM ? lastM.measurements.weight : '--', suffix: lastM ? 'kg' : '' },
+    { label: '当前身高', value: lastM && lastM.measurements.height ? lastM.measurements.height : '--', suffix: lastM && lastM.measurements.height ? 'cm' : '' },
+    { label: '当前体重', value: lastM && lastM.measurements.weight ? lastM.measurements.weight : '--', suffix: lastM && lastM.measurements.weight ? 'kg' : '' },
     { label: '里程碑', value: `${achieved}/${total}`, suffix: '' }
   ].map(s => `
     <div class="card p-5 md:p-6">
@@ -818,10 +820,14 @@ function renderTimeline() {
     const d = new Date(r.date);
     let contentHtml = '';
     if (r.type === 'measurement' && r.measurements) {
-      contentHtml = `<div class="grid grid-cols-2 gap-3 mt-3">
-        <div class="p-3 rounded-lg" style="background: var(--bg-2);"><div class="text-xs" style="color: var(--muted);">身高</div><div class="font-serif text-xl font-semibold">${r.measurements.height}<span class="text-sm ml-1" style="color: var(--muted);">cm</span></div></div>
-        <div class="p-3 rounded-lg" style="background: var(--bg-2);"><div class="text-xs" style="color: var(--muted);">体重</div><div class="font-serif text-xl font-semibold">${r.measurements.weight}<span class="text-sm ml-1" style="color: var(--muted);">kg</span></div></div>
-      </div>`;
+      let mItems = [];
+      if (r.measurements.height) mItems.push(`<div class="p-3 rounded-lg" style="background: var(--bg-2);"><div class="text-xs" style="color: var(--muted);">身高</div><div class="font-serif text-xl font-semibold">${r.measurements.height}<span class="text-sm ml-1" style="color: var(--muted);">cm</span></div></div>`);
+      if (r.measurements.weight) mItems.push(`<div class="p-3 rounded-lg" style="background: var(--bg-2);"><div class="text-xs" style="color: var(--muted);">体重</div><div class="font-serif text-xl font-semibold">${r.measurements.weight}<span class="text-sm ml-1" style="color: var(--muted);">kg</span></div></div>`);
+      if (r.measurements.head) mItems.push(`<div class="p-3 rounded-lg" style="background: var(--bg-2);"><div class="text-xs" style="color: var(--muted);">头围</div><div class="font-serif text-xl font-semibold">${r.measurements.head}<span class="text-sm ml-1" style="color: var(--muted);">cm</span></div></div>`);
+      
+      if (mItems.length > 0) {
+        contentHtml += `<div class="grid grid-cols-${mItems.length} gap-3 mt-3">${mItems.join('')}</div>`;
+      }
     }
     if (r.content) contentHtml += `<p class="text-sm leading-relaxed mt-3" style="color: var(--fg-soft);">${r.content}</p>`;
     
@@ -881,30 +887,35 @@ function renderGrowthChart() {
   if (measurements.length === 0) return;
   
   const labels = measurements.map(m => calcMonths(child.birthdate, m.date) + '月');
-  const data = measurements.map(m => m.measurements[currentMetric]);
+  const data = measurements.map(m => m.measurements[currentMetric] || null).filter(v => v !== null);
   
   growthChart = new Chart(ctx, {
     type: 'line',
-    data: { labels, datasets: [{ label: currentMetric === 'height' ? '身高' : '体重', data, borderColor: '#D67D3E', backgroundColor: 'rgba(214,125,62,0.1)', borderWidth: 3, fill: true, tension: 0.35, pointBackgroundColor: '#FFFFFF', pointBorderColor: '#D67D3E', pointBorderWidth: 2.5, pointRadius: 5, pointHoverRadius: 7 }] },
+    data: { labels, datasets: [{ label: currentMetric === 'height' ? '身高' : (currentMetric === 'weight' ? '体重' : '头围'), data, borderColor: '#D67D3E', backgroundColor: 'rgba(214,125,62,0.1)', borderWidth: 3, fill: true, tension: 0.35, pointBackgroundColor: '#FFFFFF', pointBorderColor: '#D67D3E', pointBorderWidth: 2.5, pointRadius: 5, pointHoverRadius: 7 }] },
     options: { responsive: true, maintainAspectRatio: false }
   });
   
   const last = measurements[measurements.length - 1];
+  let statsItems = [];
+  if (last.measurements.height) statsItems.push(`<div><div class="text-xs" style="color: var(--muted);">身高</div><div class="font-serif text-2xl font-bold">${last.measurements.height}<span class="text-sm ml-1" style="color: var(--muted);">cm</span></div></div>`);
+  if (last.measurements.weight) statsItems.push(`<div><div class="text-xs" style="color: var(--muted);">体重</div><div class="font-serif text-2xl font-bold">${last.measurements.weight}<span class="text-sm ml-1" style="color: var(--muted);">kg</span></div></div>`);
+  if (last.measurements.head) statsItems.push(`<div><div class="text-xs" style="color: var(--muted);">头围</div><div class="font-serif text-2xl font-bold">${last.measurements.head}<span class="text-sm ml-1" style="color: var(--muted);">cm</span></div></div>`);
+  
   document.getElementById('current-stats').innerHTML = `
     <div class="text-xs font-semibold tracking-wider mb-3" style="color: var(--muted);">最近一次测量</div>
-    <div class="grid grid-cols-2 gap-3">
-      <div><div class="text-xs" style="color: var(--muted);">身高</div><div class="font-serif text-2xl font-bold">${last.measurements.height}<span class="text-sm ml-1" style="color: var(--muted);">cm</span></div></div>
-      <div><div class="text-xs" style="color: var(--muted);">体重</div><div class="font-serif text-2xl font-bold">${last.measurements.weight}<span class="text-sm ml-1" style="color: var(--muted);">kg</span></div></div>
+    <div class="grid grid-cols-${statsItems.length > 1 ? statsItems.length : 1} gap-3">
+      ${statsItems.join('')}
     </div>
     <div class="mt-3 pt-3 border-t text-xs" style="border-color: var(--border-soft); color: var(--muted);">${formatDate(last.date)}</div>`;
   
   if (measurements.length >= 2) {
     const first = measurements[0], lastM = measurements[measurements.length - 1];
+    const metricName = currentMetric === 'height' ? '身高' : (currentMetric === 'weight' ? '体重' : '头围');
+    const unit = currentMetric === 'weight' ? 'kg' : 'cm';
     document.getElementById('growth-trend').innerHTML = `
       <div class="text-xs font-semibold tracking-wider mb-3" style="color: var(--muted);">增长趋势</div>
       <div class="space-y-2 text-sm">
-        <div class="flex justify-between"><span style="color: var(--muted);">身高增长</span><span class="font-semibold" style="color: var(--sage);">+${lastM.measurements.height - first.measurements.height} cm</span></div>
-        <div class="flex justify-between"><span style="color: var(--muted);">体重增长</span><span class="font-semibold" style="color: var(--sage);">+${lastM.measurements.weight - first.measurements.weight} kg</span></div>
+        <div class="flex justify-between"><span style="color: var(--muted);">${metricName}增长</span><span class="font-semibold" style="color: var(--sage);">+${(lastM.measurements[currentMetric] || 0) - (first.measurements[currentMetric] || 0)} ${unit}</span></div>
       </div>`;
   }
 }
@@ -1020,6 +1031,7 @@ function openRecordModal(recordId = null) {
     if (record.measurements) {
       form.elements['height'].value = record.measurements.height || '';
       form.elements['weight'].value = record.measurements.weight || '';
+      form.elements['head'].value = record.measurements.head || '';
     }
     
     selectType(record.type);
@@ -1055,7 +1067,13 @@ function selectType(type) {
   currentType = type;
   document.querySelectorAll('.type-option').forEach(o => o.classList.toggle('active', o.dataset.type === type));
   document.getElementById('milestone-select-wrap').classList.toggle('hidden', type !== 'milestone');
-  document.getElementById('measurement-fields').classList.toggle('hidden', type !== 'measurement');
+  const measurementFields = document.getElementById('measurement-fields');
+  measurementFields.classList.toggle('hidden', type !== 'measurement');
+  if (type === 'measurement') {
+    measurementFields.classList.add('grid');
+  } else {
+    measurementFields.classList.remove('grid');
+  }
   document.getElementById('content-field').classList.toggle('hidden', type === 'measurement');
   
   if (type === 'milestone') {
@@ -1143,7 +1161,8 @@ async function handleRecordSubmit(e) {
   if (currentType === 'measurement') {
     recordData.measurements = {
       height: parseFloat(formData.get('height')) || null,
-      weight: parseFloat(formData.get('weight')) || null
+      weight: parseFloat(formData.get('weight')) || null,
+      head: parseFloat(formData.get('head')) || null
     };
   }
   
