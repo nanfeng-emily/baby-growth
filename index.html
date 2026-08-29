@@ -6,7 +6,7 @@
 <title>成长拾光 · 记录每一个珍贵的瞬间</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/heic-to@1.5.2/dist/iife/heic-to.js" onerror="this.onerror=null;this.src='https://unpkg.com/heic-to@1.5.2/dist/iife/heic-to.js';"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -36,6 +36,28 @@ body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--f
 .modal-overlay { position: fixed; inset: 0; background: rgba(45,42,38,0.55); backdrop-filter: blur(10px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
 .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
 .modal-content { background: var(--card); border-radius: 24px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1); box-shadow: 0 30px 80px -20px rgba(0,0,0,0.3); }
+.viewer-shell { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; }
+.viewer-stage { width: 100%; min-height: 220px; display: flex; align-items: center; justify-content: center; }
+.viewer-media { display: block; max-width: 100%; max-height: 78vh; width: auto; height: auto; border-radius: 10px; object-fit: contain; }
+.viewer-close, .viewer-nav { border: 0; color: white; background: rgba(24,24,24,0.58); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, transform 0.2s, opacity 0.2s; }
+.viewer-close:hover, .viewer-nav:hover { background: rgba(255,255,255,0.2); }
+.viewer-close { position: absolute; right: 0; top: -52px; width: 42px; height: 42px; border-radius: 50%; z-index: 3; }
+.viewer-nav { position: absolute; top: 50%; width: 50px; height: 50px; border-radius: 50%; transform: translateY(-50%); z-index: 3; }
+.viewer-nav:hover { transform: translateY(-50%) scale(1.06); }
+.viewer-nav.prev { left: -72px; }
+.viewer-nav.next { right: -72px; }
+.viewer-meta { min-height: 28px; margin-top: 14px; color: rgba(255,255,255,0.94); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; letter-spacing: 0.02em; text-align: center; }
+.viewer-meta-title::before { content: '·'; margin-right: 10px; color: rgba(255,255,255,0.45); }
+@media (max-width: 1120px) { .viewer-nav.prev { left: 12px; } .viewer-nav.next { right: 12px; } }
+@media (max-width: 640px) {
+  #modal-image-viewer { padding: 12px; }
+  .viewer-media { max-height: 72vh; border-radius: 6px; }
+  .viewer-nav { width: 42px; height: 42px; }
+  .viewer-nav.prev { left: 8px; }
+  .viewer-nav.next { right: 8px; }
+  .viewer-close { right: 2px; top: -50px; }
+  .viewer-meta { flex-wrap: wrap; row-gap: 4px; font-size: 13px; }
+}
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 input[type="text"], input[type="date"], input[type="number"], textarea, select { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 11px; font-size: 14px; font-family: 'Manrope', sans-serif; background: var(--card); color: var(--fg); transition: all 0.2s; }
@@ -59,6 +81,37 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 .timeline-card { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px; transition: all 0.3s; position: relative; }
 .timeline-card:hover { transform: translateX(4px); box-shadow: 0 12px 28px -10px rgba(45,42,38,0.12); }
 .timeline-card img, .timeline-card video { width: 100%; border-radius: 12px; margin-top: 12px; cursor: pointer; transition: transform 0.3s; }
+.timeline-media-stage { display: flex; justify-content: flex-start; padding: 22px 5% 8px; overflow: visible; }
+.timeline-media-stage.align-end { justify-content: flex-end; }
+.timeline-media-preview { --media-tilt: -1.25deg; position: relative; display: block; width: clamp(210px, 34vw, 380px); height: clamp(220px, 30vw, 330px); padding: 10px 10px 34px; border: 1px solid rgba(45,42,38,0.08); border-radius: 2px; background: #FFFEFB; box-shadow: 0 18px 38px -18px rgba(45,42,38,0.32); cursor: zoom-in; transform: rotate(var(--media-tilt)); transition: transform 0.35s cubic-bezier(.16,1,.3,1), box-shadow 0.35s; }
+.timeline-media-stage.align-end .timeline-media-preview { --media-tilt: 1.15deg; }
+.timeline-media-preview:hover, .timeline-media-preview:focus-visible { transform: rotate(0deg) translateY(-5px); box-shadow: 0 24px 44px -16px rgba(45,42,38,0.38); outline: none; }
+.timeline-media-preview img, .timeline-media-preview video { display: block; width: 100%; height: 100%; margin: 0; border-radius: 1px; object-fit: cover; pointer-events: none; }
+.timeline-media-caption { position: absolute; left: 12px; right: 12px; bottom: 9px; display: flex; align-items: center; justify-content: space-between; font-size: 10px; letter-spacing: 0.08em; color: var(--muted); }
+.timeline-media-play { position: absolute; left: 50%; top: calc(50% - 12px); transform: translate(-50%, -50%); width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; background: rgba(45,42,38,0.68); border: 1px solid rgba(255,255,255,0.72); box-shadow: 0 5px 18px rgba(45,42,38,0.25); pointer-events: none; }
+.timeline-photo-collage { display: flex; flex-wrap: wrap; align-items: flex-start; padding: 38px 7% 96px; overflow: visible; }
+.timeline-photo-stack-item { --stack-rotation: -2deg; --stack-shift: 0px; position: relative; flex: 0 0 clamp(190px, 24vw, 286px); aspect-ratio: 3 / 4; margin-left: clamp(-66px, -4vw, -38px); margin-bottom: -54px; transform: translateY(var(--stack-shift)) rotate(var(--stack-rotation)); transform-origin: center bottom; transition: transform 0.45s cubic-bezier(.16,1,.3,1), filter 0.3s; z-index: var(--stack-z, 1); }
+.timeline-photo-stack-item:first-child { margin-left: 0; }
+.timeline-photo-stack-item:hover, .timeline-photo-stack-item:focus-within { transform: translateY(calc(var(--stack-shift) - 24px)) rotate(0deg) scale(1.04); z-index: 50 !important; }
+.timeline-photo-open { position: relative; box-sizing: border-box; width: 100%; height: 100%; padding: 9px 9px 40px; border: 0; border-radius: 3px; background: #FFFEFB; box-shadow: 0 20px 42px -17px rgba(45,42,38,0.4); cursor: zoom-in; overflow: hidden; }
+.timeline-photo-open img, .timeline-photo-open video { display: block; width: 100%; height: 100%; margin: 0; border-radius: 1px; object-fit: cover; pointer-events: none; }
+.timeline-photo-hover-caption { position: absolute; left: 13px; right: 13px; bottom: 9px; height: 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 10px; letter-spacing: 0.03em; opacity: 0; transform: translateY(5px); transition: opacity 0.22s, transform 0.28s; pointer-events: none; }
+.timeline-photo-stack-item:hover .timeline-photo-hover-caption, .timeline-photo-stack-item:focus-within .timeline-photo-hover-caption { opacity: 1; transform: translateY(0); }
+.timeline-photo-hover-content { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; color: var(--fg-soft); }
+.timeline-photo-stack-actions { position: absolute; top: 14px; right: 14px; display: flex; gap: 5px; opacity: 0; transform: translateY(-4px); transition: opacity 0.2s, transform 0.2s; z-index: 4; }
+.timeline-photo-stack-item:hover .timeline-photo-stack-actions, .timeline-photo-stack-item:focus-within .timeline-photo-stack-actions { opacity: 1; transform: translateY(0); }
+.timeline-photo-stack-actions .action-btn { background: rgba(255,254,251,0.9); backdrop-filter: blur(6px); box-shadow: 0 4px 12px rgba(45,42,38,0.14); }
+.timeline-photo-video-badge { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; background: rgba(45,42,38,0.66); border: 1px solid rgba(255,255,255,0.72); box-shadow: 0 6px 18px rgba(45,42,38,0.25); pointer-events: none; }
+@media (max-width: 640px) {
+  .timeline-media-stage, .timeline-media-stage.align-end { justify-content: center; padding-left: 0; padding-right: 0; }
+  .timeline-media-preview { width: min(88%, 300px); height: 250px; }
+  .timeline-photo-collage { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding: 34px 28px 72px; margin-left: -24px; margin-right: -24px; scrollbar-width: none; scroll-snap-type: x mandatory; }
+  .timeline-photo-collage::-webkit-scrollbar { display: none; }
+  .timeline-photo-stack-item { flex-basis: min(72vw, 270px); margin-left: -54px; margin-bottom: 0; scroll-snap-align: center; }
+  .timeline-photo-stack-item:first-child { margin-left: 0; }
+  .timeline-photo-stack-actions { opacity: 1; transform: none; }
+  .timeline-photo-hover-caption { opacity: 1; transform: none; }
+}
 .type-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
 .type-diary { background: rgba(214,125,62,0.13); color: var(--accent-dark); }
 .type-milestone { background: rgba(107,142,90,0.16); color: var(--sage); }
@@ -72,20 +125,36 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 .milestone-card.achieved { border-color: rgba(107,142,90,0.35); background: linear-gradient(135deg, var(--card) 0%, rgba(107,142,90,0.04) 100%); }
 .milestone-card.achieved::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--sage); }
 .milestone-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px -8px rgba(45,42,38,0.1); }
-.milestone-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; }
+.milestone-card img, .milestone-card video { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; display: block; }
+.milestone-media-wrap { position: relative; width: 100%; height: 120px; margin-bottom: 12px; overflow: hidden; border-radius: 8px; background: var(--bg-2); }
+.milestone-media-open { display: block; padding: 0; border: 0; cursor: zoom-in; text-align: inherit; }
+.milestone-media-open video { pointer-events: none; }
+.milestone-video-badge { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; background: rgba(45,42,38,0.68); border: 1px solid rgba(255,255,255,0.68); box-shadow: 0 4px 14px rgba(45,42,38,0.24); pointer-events: none; z-index: 3; transition: transform 0.2s, background 0.2s; }
+.milestone-media-open:hover .milestone-video-badge { transform: translate(-50%, -50%) scale(1.08); background: rgba(45,42,38,0.82); }
 .milestone-card .ms-delete { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border-radius: 6px; background: rgba(199,114,100,0.1); color: #C77264; cursor: pointer; transition: all 0.2s; border: none; display: flex; align-items: center; justify-content: center; z-index: 5; }
 .milestone-card .ms-delete:hover { background: #C77264; color: white; }
 .milestone-add-card { border: 2px dashed var(--border); border-radius: 14px; padding: 32px 18px; text-align: center; cursor: pointer; transition: all 0.2s; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px; }
 .milestone-add-card:hover { border-color: var(--accent); background: rgba(214,125,62,0.03); }
-.gallery-grid { column-count: 4; column-gap: 16px; }
-@media (max-width: 1024px) { .gallery-grid { column-count: 3; } }
-@media (max-width: 640px) { .gallery-grid { column-count: 2; } }
-.gallery-item { break-inside: avoid; margin-bottom: 16px; border-radius: 14px; overflow: hidden; cursor: pointer; position: relative; transition: transform 0.3s; }
-.gallery-item:hover { transform: scale(1.02); }
-.gallery-item img, .gallery-item video { width: 100%; height: auto; display: block; }
-.gallery-item .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(45,42,38,0.9), rgba(45,42,38,0.2) 50%, transparent 80%); opacity: 0; transition: opacity 0.3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 14px; color: white; pointer-events: none; }
-.gallery-item:hover .overlay { opacity: 1; }
-.gallery-item .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.gallery-grid { --card-width: clamp(128px, 16vw, 210px); min-height: 430px; display: flex; align-items: flex-end; justify-content: center; position: relative; padding: 115px 18px 8px; isolation: isolate; overflow: visible; }
+.gallery-item { width: var(--card-width); aspect-ratio: 3 / 4; flex: 0 0 var(--card-width); margin-left: var(--deck-overlap, clamp(-72px, -5vw, -42px)); border: 5px solid rgba(255,255,255,0.94); border-radius: 5px; overflow: hidden; cursor: pointer; position: relative; background: var(--card); box-shadow: 0 16px 35px rgba(45,42,38,0.18); transform-origin: 50% 115%; transform: translateY(var(--deck-y, 0px)) rotate(var(--deck-rotation, 0deg)); transition: transform 520ms cubic-bezier(.16,1,.3,1), box-shadow 420ms ease, filter 320ms ease, opacity 320ms ease; z-index: var(--deck-z, 1); will-change: transform; }
+.gallery-item:first-child { margin-left: 0; }
+.gallery-item:hover, .gallery-item:focus-visible, .gallery-item.is-active { transform: translateY(-112px) rotate(0deg) scale(1.16); box-shadow: 0 28px 55px rgba(45,42,38,0.3); z-index: 40; outline: none; }
+.gallery-grid:has(.gallery-item:hover) .gallery-item:not(:hover), .gallery-grid:has(.gallery-item:focus-visible) .gallery-item:not(:focus-visible) { filter: saturate(.72) brightness(.9); opacity: .78; }
+.gallery-item img, .gallery-item video { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.gallery-item .overlay { position: absolute; left: 10px; right: 10px; bottom: 9px; display: flex; justify-content: space-between; align-items: flex-end; color: white; pointer-events: none; opacity: 0; transform: translateY(6px); transition: opacity 220ms ease, transform 260ms ease; text-shadow: 0 1px 8px rgba(0,0,0,.75); }
+.gallery-item:hover .overlay, .gallery-item:focus-visible .overlay, .gallery-item.is-active .overlay { opacity: 1; transform: translateY(0); }
+.gallery-item .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 48px; height: 48px; background: rgba(45,42,38,0.58); border: 1px solid rgba(255,255,255,.55); backdrop-filter: blur(6px); border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; transition: opacity .2s; }
+.gallery-item:hover .play-icon { opacity: .25; }
+.gallery-deck-hint { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; color: var(--muted); font-size: 12px; }
+@media (max-width: 720px) {
+  .gallery-grid { min-height: 360px; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; padding: 50px 24px 24px; margin-left: -24px; margin-right: -24px; scrollbar-width: none; }
+  .gallery-grid::-webkit-scrollbar { display: none; }
+  .gallery-item { --card-width: min(68vw, 260px); margin-left: -34px; scroll-snap-align: center; transform: translateY(0) rotate(var(--deck-rotation, 0deg)); }
+  .gallery-item:first-child { margin-left: 0; }
+  .gallery-item:hover, .gallery-item:focus-visible, .gallery-item.is-active { transform: translateY(-28px) rotate(0deg) scale(1.04); }
+  .gallery-grid:has(.gallery-item:hover) .gallery-item:not(:hover) { filter: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .gallery-item { transition-duration: .01ms; } }
 .gallery-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .photo-picker-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 640px) { .photo-picker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -275,6 +344,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
             <button class="btn-primary" onclick="document.getElementById('growth-section').scrollIntoView({behavior:'smooth'})">成长曲线</button>
             <button class="btn-secondary" onclick="document.getElementById('gallery-section').scrollIntoView({behavior:'smooth'})">浏览照片墙</button>
             <button class="btn-secondary" onclick="document.getElementById('milestones-section').scrollIntoView({behavior:'smooth'})">成就里程碑</button>
+            <button class="btn-secondary" onclick="document.getElementById('timeline-section').scrollIntoView({behavior:'smooth'})">成长时间线</button>
           </div>
         </div>
         <div class="lg:col-span-2">
@@ -294,7 +364,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
         <div>
           <div class="text-sm font-semibold tracking-wider mb-3" style="color: var(--yellow);">— 照片墙</div>
           <h2 class="section-title">用画面留住时光</h2>
-          <p class="mt-3 text-sm" style="color: var(--muted);">只展示你亲自选中的珍贵画面。</p>
+          <p class="mt-3 text-sm" style="color: var(--muted);">只展示你亲自选中的珍贵画面；把照片从记忆里轻轻抽出来。</p>
         </div>
         <div class="gallery-actions">
           <button class="btn-secondary" onclick="openGalleryManager()">管理照片墙</button>
@@ -302,6 +372,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
         </div>
       </div>
       <div id="gallery-grid" class="gallery-grid reveal"></div>
+      <div id="gallery-deck-hint" class="gallery-deck-hint hidden"><span>↔</span><span>悬停抽出照片 · 点击查看完整画面</span></div>
       <div id="gallery-empty" class="empty-state hidden"><p>还没有精选照片，点击“管理照片墙”开始选择</p></div>
     </div>
   </section>
@@ -354,11 +425,11 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
         <h2 class="section-title">每一个故事，都值得被讲述</h2>
       </div>
       <div id="timeline-filters" class="flex flex-wrap gap-2">
-        <button class="chip active" data-filter="all">全部</button>
+        <button class="chip" data-filter="all">全部</button>
         <button class="chip" data-filter="diary">日记</button>
         <button class="chip" data-filter="milestone">里程碑</button>
         <button class="chip" data-filter="measurement">测量</button>
-        <button class="chip" data-filter="photo">照片</button>
+        <button class="chip active" data-filter="photo">照片</button>
       </div>
     </div>
     <div id="timeline-container" class="reveal"></div>
@@ -438,12 +509,12 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
         <input type="date" name="milestone_date" id="milestone-date" required>
       </div>
       <div>
-        <label>纪念照片</label>
+        <label>纪念照片或视频</label>
         <div class="image-upload-area" id="milestone-media-upload-area" onclick="document.getElementById('milestone-media-input').click()">
-          <input type="file" accept="image/*" id="milestone-media-input" hidden>
+          <input type="file" accept="image/*,video/*" id="milestone-media-input" hidden>
           <div id="milestone-upload-placeholder">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 8px; color: var(--muted);"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <p class="text-sm" style="color: var(--muted);">点击上传照片</p>
+            <p class="text-sm" style="color: var(--muted);">点击上传照片或视频</p>
           </div>
           <div id="milestone-media-preview" class="hidden"></div>
         </div>
@@ -508,16 +579,16 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 <div id="modal-gallery-manager" class="modal-overlay">
   <div class="modal-content" style="max-width: 860px;">
     <div class="p-6 border-b flex items-center justify-between" style="border-color: var(--border-soft);">
-      <div><h3 class="font-serif text-2xl font-semibold">管理照片墙</h3><p class="text-xs mt-1" style="color:var(--muted);">点选想展示的照片或视频，再保存选择。</p></div>
+      <div><h3 class="font-serif text-2xl font-semibold">管理照片墙</h3><p class="text-xs mt-1" style="color:var(--muted);">可从成长记录和里程碑中点选照片或视频，再保存选择。</p></div>
       <button type="button" onclick="closeModal('modal-gallery-manager')" class="btn-ghost p-2" aria-label="关闭">×</button>
     </div>
     <div class="p-6">
-      <div id="gallery-manager-grid" class="photo-picker-grid"></div>
-      <div id="gallery-manager-empty" class="empty-state hidden"><p>还没有带照片或视频的记录</p></div>
-      <div class="flex items-center justify-between gap-3 mt-6 pt-5 border-t" style="border-color:var(--border-soft);">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-5 border-b" style="border-color:var(--border-soft);">
         <span id="gallery-selection-count" class="text-sm" style="color:var(--muted);"></span>
-        <div class="flex gap-3"><button class="btn-secondary" onclick="closeModal('modal-gallery-manager')">取消</button><button class="btn-primary" onclick="saveGallerySelection()">保存选择</button></div>
+        <div class="flex gap-3"><button class="btn-primary" onclick="saveGallerySelection()">保存选择</button><button class="btn-secondary" onclick="closeModal('modal-gallery-manager')">取消</button></div>
       </div>
+      <div id="gallery-manager-grid" class="photo-picker-grid"></div>
+      <div id="gallery-manager-empty" class="empty-state hidden"><p>还没有带照片或视频的成长记录或里程碑</p></div>
     </div>
   </div>
 </div>
@@ -611,6 +682,22 @@ const FSAdapter = {
   async loadDB() { try { const fileHandle = await this.rootDir.getFileHandle('db.json'); const file = await fileHandle.getFile(); const text = await file.text(); return JSON.parse(text); } catch (e) { return null; } },
   async saveDB(data) { if (!this.rootDir) throw new Error('尚未连接存储文件夹'); try { const fileHandle = await this.rootDir.getFileHandle('db.json', { create: true }); const writable = await fileHandle.createWritable(); await writable.write(JSON.stringify(data, null, 2)); await writable.close(); return true; } catch (e) { toast("保存失败：" + e.message); throw e; } },
   async saveMedia(blob, ext) { const fileName = `media_${Date.now()}.${ext}`; const fileHandle = await this.mediaDir.getFileHandle(fileName, { create: true }); const writable = await fileHandle.createWritable(); await writable.write(blob); await writable.close(); return fileName; },
+  async findMatchingMedia(blob) {
+    if (!blob || !this.mediaDir) return null;
+    const targetFingerprint = await calculateMediaFingerprint(blob);
+    for await (const entry of this.mediaDir.values()) {
+      if (entry.kind !== 'file') continue;
+      const existingFile = await entry.getFile();
+      if (existingFile.size !== blob.size) continue;
+      if (await calculateMediaFingerprint(existingFile) === targetFingerprint) return entry.name;
+    }
+    return null;
+  },
+  async saveMediaDeduplicated(blob, ext) {
+    const existingMediaId = await this.findMatchingMedia(blob);
+    if (existingMediaId) return { mediaId: existingMediaId, reused: true };
+    return { mediaId: await this.saveMedia(blob, ext), reused: false };
+  },
   async copyMediaToFolder(fileHandle) { const file = await fileHandle.getFile(); const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_'); const newName = `media_${Date.now()}_${crypto.randomUUID().slice(0, 8)}_${safeName}`; const newFileHandle = await this.mediaDir.getFileHandle(newName, { create: true }); const writable = await newFileHandle.createWritable(); await writable.write(file); await writable.close(); return newName; },
   async getMediaUrl(mediaId) { if (!mediaId) return ''; if (mediaId.startsWith('http')) return mediaId; if (this.urlCache[mediaId]) return this.urlCache[mediaId]; try { const fileHandle = await this.mediaDir.getFileHandle(mediaId); const file = await fileHandle.getFile(); const url = URL.createObjectURL(file); this.urlCache[mediaId] = url; return url; } catch (e) { return ''; } },
   async deleteMedia(mediaId) { if (!mediaId || mediaId.startsWith('http')) return; try { await this.mediaDir.removeEntry(mediaId); } catch (e) {} }
@@ -618,6 +705,29 @@ const FSAdapter = {
 
 async function getMediaUrl(mediaId) { return await FSAdapter.getMediaUrl(mediaId); }
 async function loadMediaElements() { const elements = document.querySelectorAll('[data-media-id]'); for (const el of elements) { const id = el.dataset.mediaId; const url = await getMediaUrl(id); if (url) el.src = url; } }
+
+const mediaFingerprintCache = new WeakMap();
+async function calculateMediaFingerprint(blob) {
+  if (mediaFingerprintCache.has(blob)) return mediaFingerprintCache.get(blob);
+  const chunkSize = 2 * 1024 * 1024;
+  const fullHashLimit = 32 * 1024 * 1024;
+  const sampledBlob = blob.size <= fullHashLimit
+    ? blob
+    : new Blob([blob.slice(0, chunkSize), blob.slice(-chunkSize), String(blob.size)]);
+  const bytes = new Uint8Array(await sampledBlob.arrayBuffer());
+  let digest;
+  if (crypto.subtle) {
+    const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
+    digest = Array.from(new Uint8Array(hashBuffer), byte => byte.toString(16).padStart(2, '0')).join('');
+  } else {
+    let hash = 2166136261;
+    for (const byte of bytes) { hash ^= byte; hash = Math.imul(hash, 16777619); }
+    digest = (hash >>> 0).toString(16).padStart(8, '0');
+  }
+  const fingerprint = `content:${blob.size}:${digest}`;
+  mediaFingerprintCache.set(blob, fingerprint);
+  return fingerprint;
+}
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
@@ -669,13 +779,15 @@ const DB = {
   async save() { await FSAdapter.saveDB(this.data); },
   async addChild(child) { child.id = 'c' + Date.now(); this.data.children.push(child); this.data.activeChildId = child.id; await this.save(); },
   async updateChild(id, updates) { const c = this.data.children.find(c => c.id === id); if (c) { Object.assign(c, updates); await this.save(); } },
-  async removeChild(id) { if (this.data.children.length <= 1) return false; const recordsToDelete = this.data.records.filter(r => r.childId === id); for (const r of recordsToDelete) { if (r.mediaId) await FSAdapter.deleteMedia(r.mediaId); } this.data.children = this.data.children.filter(c => c.id !== id); this.data.records = this.data.records.filter(r => r.childId !== id); if (this.data.activeChildId === id) this.data.activeChildId = this.data.children[0].id; await this.save(); return true; },
+  isMediaReferenced(mediaId) { return !!mediaId && (this.data.records.some(r => r.mediaId === mediaId) || (this.data.milestones || []).some(m => m.mediaId === mediaId)); },
+  async deleteMediaIfUnused(mediaId) { if (mediaId && !this.isMediaReferenced(mediaId)) await FSAdapter.deleteMedia(mediaId); },
+  async removeChild(id) { if (this.data.children.length <= 1) return false; const removedRecords = this.data.records.filter(r => r.childId === id); const removedMilestones = (this.data.milestones || []).filter(m => m.childId === id); const mediaIds = [...new Set([...removedRecords, ...removedMilestones].map(item => item.mediaId).filter(Boolean))]; this.data.children = this.data.children.filter(c => c.id !== id); this.data.records = this.data.records.filter(r => r.childId !== id); this.data.milestones = (this.data.milestones || []).filter(m => m.childId !== id); if (this.data.activeChildId === id) this.data.activeChildId = this.data.children[0].id; for (const mediaId of mediaIds) await this.deleteMediaIfUnused(mediaId); await this.save(); return true; },
   async addRecord(record) { record.id = 'r' + Date.now(); record.childId = this.data.activeChildId; this.data.records.push(record); await this.save(); },
-  async updateRecord(id, updatedData, oldMediaId) { const idx = this.data.records.findIndex(r => r.id === id); if (idx !== -1) { const oldRecord = this.data.records[idx]; if (updatedData.mediaId !== oldMediaId && oldMediaId) { await FSAdapter.deleteMedia(oldMediaId); } this.data.records[idx] = { ...oldRecord, ...updatedData }; await this.save(); } },
-  async removeRecord(id) { const record = this.data.records.find(r => r.id === id); if (record && record.mediaId) { await FSAdapter.deleteMedia(record.mediaId); } this.data.records = this.data.records.filter(r => r.id !== id); await this.save(); },
+  async updateRecord(id, updatedData, oldMediaId) { const idx = this.data.records.findIndex(r => r.id === id); if (idx !== -1) { const oldRecord = this.data.records[idx]; this.data.records[idx] = { ...oldRecord, ...updatedData }; if (updatedData.mediaId !== oldMediaId) await this.deleteMediaIfUnused(oldMediaId); await this.save(); } },
+  async removeRecord(id) { const record = this.data.records.find(r => r.id === id); this.data.records = this.data.records.filter(r => r.id !== id); if (record) await this.deleteMediaIfUnused(record.mediaId); await this.save(); },
   async addMilestone(m) { m.id = 'm' + Date.now(); this.data.milestones.push(m); await this.save(); },
-  async updateMilestone(id, updates, oldMediaId) { const m = this.data.milestones.find(m => m.id === id); if (m) { Object.assign(m, updates); if (updates.mediaId !== oldMediaId && oldMediaId) { await FSAdapter.deleteMedia(oldMediaId); } await this.save(); } },
-  async removeMilestone(id) { const m = this.data.milestones.find(m => m.id === id); if (m && m.mediaId) { await FSAdapter.deleteMedia(m.mediaId); } this.data.milestones = this.data.milestones.filter(m => m.id !== id); await this.save(); },
+  async updateMilestone(id, updates, oldMediaId) { const m = this.data.milestones.find(m => m.id === id); if (m) { Object.assign(m, updates); if (updates.mediaId !== oldMediaId) await this.deleteMediaIfUnused(oldMediaId); await this.save(); } },
+  async removeMilestone(id) { const m = this.data.milestones.find(m => m.id === id); this.data.milestones = this.data.milestones.filter(m => m.id !== id); if (m) await this.deleteMediaIfUnused(m.mediaId); await this.save(); },
   getActiveChild() { return this.data.children.find(c => c.id === this.data.activeChildId); },
   getRecords(childId = null) { const cid = childId || this.data.activeChildId; return this.data.records.filter(r => r.childId === cid).sort((a, b) => new Date(b.date) - new Date(a.date)); },
   getMeasurements(childId = null) { return this.getRecords(childId).filter(r => r.type === 'measurement' && r.measurements).sort((a, b) => new Date(a.date) - new Date(b.date)); }
@@ -689,10 +801,11 @@ function formatDate(s) { const d = new Date(s); return `${d.getFullYear()}年${d
 function toast(msg) { const t = document.getElementById('toast'); if (!t) return; t.textContent = msg; t.classList.add('show'); clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('show'), 3000); }
 function compressImage(file, maxSize = 1920, quality = 0.85) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { let { width, height } = img; if (width > height && width > maxSize) { height = Math.round(height * maxSize / width); width = maxSize; } else if (height > maxSize) { width = Math.round(width * maxSize / height); height = maxSize; } const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); canvas.toBlob(b => b ? resolve(b) : reject(new Error('Failed')), 'image/jpeg', quality); }; img.onerror = reject; img.src = e.target.result; }; reader.onerror = reject; reader.readAsDataURL(file); }); }
 
-let currentTimelineFilter = 'all', currentMetric = 'height', growthChart = null, currentMediaBlob = null, currentMediaType = 'image', currentType = 'diary', editingRecordId = null, currentMilestoneMediaBlob = null, editingMilestoneId = null;
+let currentTimelineFilter = 'photo', currentMetric = 'height', growthChart = null, currentMediaBlob = null, currentMediaType = 'image', currentType = 'diary', editingRecordId = null, currentMilestoneMediaBlob = null, currentMilestoneMediaType = 'image', editingMilestoneId = null;
 let galleryDraftSelection = new Set(), projectSelection = new Set(), currentProjectType = 'calendar', currentProjectTemplate = 'calendar-warm', currentProjectPrintSize = 'a4-portrait';
 let bookPages = [], bookPageSerial = 0;
 let projectCrops = new Map(), activeCropKey = '', cropDraft = { x: 50, y: 50, zoom: 1 }, cropDragState = null;
+let viewerItems = [], viewerIndex = -1, viewerRenderToken = 0;
 const PRINT_SIZE_PRESETS = {
   'a4-portrait': { width: 210, height: 297, pageRule: 'A4 portrait', padding: 12, name: 'A4 竖版', note: '适合家用打印机、成长书和相框，也是当前版式的推荐尺寸。' },
   'a4-landscape': { width: 297, height: 210, pageRule: 'A4 landscape', padding: 9, name: 'A4 横版', note: '适合横向台历；打印窗口中也要选择“横向”。' },
@@ -719,6 +832,32 @@ const PROJECT_TEMPLATES = {
 function renderNav() { const s = document.getElementById('child-selector'); if (!DB.data) return; s.innerHTML = DB.data.children.map(c => `<button class="child-tab ${c.id === DB.data.activeChildId ? 'active' : ''}" onclick="switchChild(${inlineArg(c.id)})"><div class="avatar" style="width: 22px; height: 22px; font-size: 11px;">${escapeHtml(c.nickname.charAt(0))}</div>${escapeHtml(c.nickname)}</button>`).join(''); }
 function renderHero() { const c = DB.getActiveChild(); if (!c) return; const a = calcAge(c.birthdate), d = calcDays(c.birthdate); document.getElementById('hero-child-card').innerHTML = `<div class="flex items-center gap-4 mb-6"><div class="avatar" style="width: 64px; height: 64px; font-size: 26px;">${escapeHtml(c.nickname.charAt(0))}</div><div><div class="font-serif text-2xl font-semibold">${escapeHtml(c.nickname)}</div><div class="text-sm" style="color: var(--muted);">${escapeHtml(formatAge(a))} · ${c.gender === 'M' ? '男孩' : '女孩'}</div></div></div><div class="border-t pt-6" style="border-color: var(--border-soft);"><div class="text-xs font-semibold tracking-wider mb-2" style="color: var(--muted);">已陪伴</div><div class="flex items-baseline gap-2"><span class="big-number" style="font-size: 64px; color: var(--accent);">${Number.isFinite(d) ? d : '--'}</span><span class="text-lg" style="color: var(--muted);">天</span></div></div><div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t" style="border-color: var(--border-soft);"><div><div class="text-xs font-semibold tracking-wider mb-1" style="color: var(--muted);">出生日期</div><div class="text-sm font-medium">${escapeHtml(formatDate(c.birthdate))}</div></div></div>`; }
 
+function getMilestoneEntries() {
+  const activeChildId = DB.data.activeChildId;
+  const directMilestones = (DB.data.milestones || [])
+    .filter(m => !m.childId || m.childId === activeChildId)
+    .map(m => ({ ...m, source: 'milestone', displayName: m.name || '成长里程碑' }));
+  const recordMilestones = DB.getRecords()
+    .filter(r => r.type === 'milestone')
+    .map(r => ({ ...r, source: 'record', displayName: r.title || '成长里程碑' }));
+  return [...directMilestones, ...recordMilestones]
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function getTimelineEntries() {
+  const records = DB.getRecords().map(r => ({ ...r, source: 'record' }));
+  if (currentTimelineFilter !== 'all' && currentTimelineFilter !== 'milestone') {
+    return records.filter(r => r.type === currentTimelineFilter);
+  }
+  const directMilestones = getMilestoneEntries()
+    .filter(m => m.source === 'milestone')
+    .map(m => ({ ...m, type: 'milestone', title: m.displayName, content: m.content || '' }));
+  const combined = currentTimelineFilter === 'milestone'
+    ? [...records.filter(r => r.type === 'milestone'), ...directMilestones]
+    : [...records, ...directMilestones];
+  return combined.sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
 function renderStats() {
   const c = DB.getActiveChild(); if (!c) return;
   const ms = DB.getMeasurements(); const last = ms[ms.length - 1]; const days = calcDays(c.birthdate);
@@ -726,18 +865,60 @@ function renderStats() {
     { label: '陪伴天数', value: days, suffix: '' },
     { label: '当前身高', value: last && last.measurements.height ? last.measurements.height : '--', suffix: last && last.measurements.height ? 'cm' : '' },
     { label: '当前体重', value: last && last.measurements.weight ? last.measurements.weight : '--', suffix: last && last.measurements.weight ? 'kg' : '' },
-    { label: '里程碑', value: DB.data.milestones.length, suffix: '个' }
+    { label: '里程碑', value: getMilestoneEntries().length, suffix: '个' }
   ].map(s => `<div class="card p-5 md:p-6"><div class="text-xs font-semibold tracking-wider mb-3" style="color: var(--muted);">${s.label}</div><div class="flex items-baseline gap-1"><span class="big-number" style="font-size: 36px;">${s.value}</span>${s.suffix ? `<span class="text-sm" style="color: var(--muted);">${s.suffix}</span>` : ''}</div></div>`).join('');
 }
 
 function getTypeBadge(type) { const l = { diary: '日记', milestone: '里程碑', measurement: '测量', photo: '照片' }; const safeType = Object.hasOwn(l, type) ? type : 'diary'; return `<span class="type-badge type-${safeType}">${l[safeType]}</span>`; }
 
+function renderPhotoTimeline(records, container) {
+  records = records.filter(r => r.mediaId);
+  if (!records.length) {
+    container.innerHTML = `<div class="empty-state"><p>还没有可以展示的照片或视频</p></div>`;
+    return;
+  }
+  let currentYear = null;
+  let stackIndex = 0;
+  let html = '';
+  const rotations = [-2.4, 1.6, -1.1, 2.2, -1.8, 1.2];
+  records.forEach(r => {
+    const year = new Date(r.date).getFullYear();
+    if (year !== currentYear) {
+      if (currentYear !== null) html += '</div>';
+      currentYear = year;
+      stackIndex = 0;
+      html += `<div class="year-divider" style="margin-left: 0;"><span>${year}</span><div class="line"></div></div><div class="timeline-photo-collage">`;
+    }
+    const isVideo = r.mediaType === 'video';
+    const meaningfulContent = typeof r.content === 'string' && r.content.trim() && r.content.trim() !== '自动导入'
+      ? r.content.trim()
+      : (isVideo ? '播放视频' : '查看大图');
+    const shift = (stackIndex % 4) * 18;
+    const rotation = rotations[stackIndex % rotations.length];
+    const media = isVideo
+      ? `<video data-media-id="${escapeHtml(r.mediaId)}" muted playsinline preload="metadata"></video><span class="timeline-photo-video-badge"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>`
+      : `<img data-media-id="${escapeHtml(r.mediaId)}" alt="${escapeHtml(r.title || '成长照片')}">`;
+    html += `<div class="timeline-photo-stack-item" style="--stack-rotation:${rotation}deg;--stack-shift:${shift}px;--stack-z:${stackIndex + 1};">
+      <button type="button" class="timeline-photo-open" onclick="viewMedia(${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, '${isVideo ? 'video' : 'image'}', 'timeline-photo', ${inlineArg(r.id)})" aria-label="${isVideo ? '打开视频' : '查看大图'}：${escapeHtml(r.title || '成长照片')}">${media}<span class="timeline-photo-hover-caption"><span>${escapeHtml(formatDate(r.date))}</span><span class="timeline-photo-hover-content" title="${escapeHtml(meaningfulContent)}">${escapeHtml(meaningfulContent)} →</span></span></button>
+      <div class="timeline-photo-stack-actions">
+        <button class="action-btn edit-btn" data-id="${escapeHtml(r.id)}" data-source="record" title="编辑"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="action-btn delete-btn" data-id="${escapeHtml(r.id)}" data-source="record" title="删除"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+      </div>
+    </div>`;
+    stackIndex++;
+  });
+  if (currentYear !== null) html += '</div>';
+  container.innerHTML = html;
+  loadMediaElements();
+}
+
 function renderTimeline() {
-  const records = DB.getRecords(); const filtered = currentTimelineFilter === 'all' ? records : records.filter(r => r.type === currentTimelineFilter);
+  const filtered = getTimelineEntries();
   const container = document.getElementById('timeline-container');
   if (filtered.length === 0) { container.innerHTML = `<div class="empty-state"><p>还没有记录，点击"添加记录"开始书写成长故事</p></div>`; return; }
+  if (currentTimelineFilter === 'photo') { renderPhotoTimeline(filtered, container); return; }
   let currentYear = null, html = '';
-  filtered.forEach(r => {
+  filtered.forEach((r, index) => {
     const year = new Date(r.date).getFullYear(); if (year !== currentYear) { currentYear = year; html += `<div class="year-divider"><span>${year}</span><div class="line"></div></div>`; }
     const d = new Date(r.date); let contentHtml = '';
     if (r.type === 'measurement' && r.measurements) {
@@ -748,9 +929,15 @@ function renderTimeline() {
       if (items.length > 0) contentHtml += `<div class="grid grid-cols-${items.length} gap-3 mt-3">${items.join('')}</div>`;
     }
     if (r.content) contentHtml += `<p class="text-sm leading-relaxed mt-3" style="color: var(--fg-soft);">${escapeHtml(r.content)}</p>`;
-    if (r.mediaId) { if (r.mediaType === 'video') contentHtml += `<video data-media-id="${escapeHtml(r.mediaId)}" controls preload="metadata"></video>`; else contentHtml += `<img data-media-id="${escapeHtml(r.mediaId)}" onclick="viewMedia(${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, 'image')" style="cursor: pointer;">`; }
+    if (r.mediaId) {
+      const isVideo = r.mediaType === 'video';
+      const mediaElement = isVideo
+        ? `<video data-media-id="${escapeHtml(r.mediaId)}" muted playsinline preload="metadata"></video><span class="timeline-media-play"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>`
+        : `<img data-media-id="${escapeHtml(r.mediaId)}" alt="${escapeHtml(r.title || '成长照片')}">`;
+      contentHtml += `<div class="timeline-media-stage ${index % 2 ? 'align-end' : ''}"><button type="button" class="timeline-media-preview" onclick="viewMedia(${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, '${isVideo ? 'video' : 'image'}', 'timeline', ${inlineArg(r.id)})" aria-label="${isVideo ? '打开视频' : '查看大图'}：${escapeHtml(r.title || '成长记录')}">${mediaElement}<span class="timeline-media-caption"><span>${escapeHtml(formatDate(r.date))}</span><span>${isVideo ? '播放视频' : '查看大图'} →</span></span></button></div>`;
+    }
     const safeType = ['diary', 'milestone', 'measurement', 'photo'].includes(r.type) ? r.type : 'diary';
-    html += `<div class="timeline-item"><div class="timeline-marker"><div class="month-day">${d.getMonth()+1}月${d.getDate()}日</div><div class="year">${year}</div></div><div class="timeline-dot ${safeType}"></div><div class="timeline-card"><div class="action-btns"><button class="action-btn edit-btn" data-id="${escapeHtml(r.id)}" title="编辑"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn delete-btn" data-id="${escapeHtml(r.id)}" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div><div class="flex items-center mb-2 gap-2" style="padding-right: 80px;"><h3 class="font-serif text-lg font-semibold">${escapeHtml(r.title)}</h3>${getTypeBadge(safeType)}</div>${contentHtml}</div></div>`;
+    html += `<div class="timeline-item"><div class="timeline-marker"><div class="month-day">${d.getMonth()+1}月${d.getDate()}日</div><div class="year">${year}</div></div><div class="timeline-dot ${safeType}"></div><div class="timeline-card"><div class="action-btns"><button class="action-btn edit-btn" data-id="${escapeHtml(r.id)}" data-source="${escapeHtml(r.source || 'record')}" title="编辑"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn delete-btn" data-id="${escapeHtml(r.id)}" data-source="${escapeHtml(r.source || 'record')}" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div><div class="flex items-center mb-2 gap-2" style="padding-right: 80px;"><h3 class="font-serif text-lg font-semibold">${escapeHtml(r.title)}</h3>${getTypeBadge(safeType)}</div>${contentHtml}</div></div>`;
   });
   container.innerHTML = html; loadMediaElements();
 }
@@ -779,57 +966,101 @@ function renderGrowthChart() {
 }
 
 function renderMilestones() {
-  const ms = DB.data.milestones || [];
+  const ms = getMilestoneEntries();
   document.getElementById('milestone-progress').innerHTML = `<div class="text-sm" style="color: var(--muted);">已记录</div><div class="font-serif text-3xl font-bold" style="color: var(--sage);">${ms.length}<span class="text-lg" style="color: var(--muted);">个</span></div>`;
   let html = `<div class="milestone-add-card" onclick="openMilestoneModal()" style="grid-column: span 1;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><p class="text-sm mt-2" style="color: var(--accent);">添加里程碑</p></div>`;
   ms.forEach(m => {
-    html += `<div class="milestone-card achieved" onclick="openMilestoneModal(${inlineArg(m.id)})" style="cursor: pointer;">
-      <button class="ms-delete" onclick="event.stopPropagation(); deleteMilestoneConfirm(${inlineArg(m.id)})" title="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-      ${m.mediaId ? `<div data-ms-img="${escapeHtml(m.mediaId)}" style="width: 100%; height: 120px; background: var(--bg-2); border-radius: 8px; margin-bottom: 12px; background-size: cover; background-position: center;"></div>` : '<div style="width:100%;height:120px;background:var(--bg-2);border-radius:8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>'}
-      <div class="font-serif text-lg font-semibold mb-1">${escapeHtml(m.name)}</div>
+    const isVideo = m.mediaType === 'video';
+    const mediaMarkup = m.mediaId
+      ? `<button type="button" class="milestone-media-wrap milestone-media-open" onclick="event.stopPropagation(); viewMedia(${inlineArg(m.mediaId)}, ${inlineArg(m.displayName)}, '${isVideo ? 'video' : 'image'}', 'milestone', ${inlineArg(m.id)})" aria-label="${isVideo ? '打开视频' : '查看照片'}：${escapeHtml(m.displayName)}">${isVideo
+          ? `<video data-media-id="${escapeHtml(m.mediaId)}" playsinline preload="metadata"></video><span class="milestone-video-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>`
+          : `<img data-media-id="${escapeHtml(m.mediaId)}" alt="${escapeHtml(m.displayName)}的纪念照片">`}</button>`
+      : '<div class="milestone-media-wrap" style="display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>';
+    html += `<div class="milestone-card achieved" onclick="openMilestoneEntry(${inlineArg(m.source)}, ${inlineArg(m.id)})" style="cursor: pointer;">
+      <button class="ms-delete" onclick="event.stopPropagation(); deleteMilestoneEntryConfirm(${inlineArg(m.source)}, ${inlineArg(m.id)})" title="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+      ${mediaMarkup}
+      <div class="font-serif text-lg font-semibold mb-1">${escapeHtml(m.displayName)}</div>
       <div class="text-xs" style="color: var(--sage);">${formatDate(m.date)}</div>
     </div>`;
   });
   document.getElementById('milestones-grid').innerHTML = html;
-  document.querySelectorAll('[data-ms-img]').forEach(async (el) => { const id = el.dataset.msImg; const url = await getMediaUrl(id); if (url) el.style.backgroundImage = `url('${url}')`; });
+  loadMediaElements();
 }
 
-async function deleteMilestoneConfirm(id) {
+function openMilestoneEntry(source, id) {
+  if (source === 'record') openRecordModal(id);
+  else openMilestoneModal(id);
+}
+
+async function deleteMilestoneEntryConfirm(source, id) {
   if (!FSAdapter.isAvailable && !(await connectAndStart())) return;
-  if (confirm('确定删除这个里程碑吗？相关照片也会被删除。')) {
-    await DB.removeMilestone(id);
+  if (confirm('确定删除这个里程碑吗？相关照片或视频也会被删除。')) {
+    if (source === 'record') await DB.removeRecord(id);
+    else await DB.removeMilestone(id);
     renderAll();
     toast('里程碑已删除');
   }
 }
 
+function getSelectableMediaEntries() {
+  const recordMedia = DB.getRecords()
+    .filter(r => r.mediaId)
+    .map(r => ({ ...r, source: 'record', gallerySelected: r.showInGallery !== false }));
+  const milestoneMedia = getMilestoneEntries()
+    .filter(m => m.source === 'milestone' && m.mediaId)
+    .map(m => ({ ...m, title: m.displayName, content: m.content || '', gallerySelected: m.showInGallery === true }));
+  return [...recordMedia, ...milestoneMedia]
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
 function renderGallery() {
-  const records = DB.getRecords().filter(r => r.mediaId && r.showInGallery !== false);
-  const grid = document.getElementById('gallery-grid'); const empty = document.getElementById('gallery-empty');
-  if (records.length === 0) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  const records = getSelectableMediaEntries().filter(r => r.gallerySelected);
+  const grid = document.getElementById('gallery-grid'); const empty = document.getElementById('gallery-empty'); const hint = document.getElementById('gallery-deck-hint');
+  if (records.length === 0) { grid.innerHTML = ''; empty.classList.remove('hidden'); if (hint) hint.classList.add('hidden'); return; }
   empty.classList.add('hidden');
-  grid.innerHTML = records.map(r => {
-    const safeContent = (r.content || '').replace(/\n/g, ' ').trim();
-    const contentHtml = safeContent ? `<div class="text-xs mt-1 opacity-90 text-clamp-2">${escapeHtml(safeContent)}</div>` : '';
+  if (hint) hint.classList.remove('hidden');
+  const middle = (records.length - 1) / 2;
+  grid.innerHTML = records.map((r, index) => {
+    const distance = index - middle;
+    const rotation = Math.max(-13, Math.min(13, distance * 5));
+    const lift = Math.abs(distance) * 4;
+    const deckStyle = `--deck-rotation:${rotation.toFixed(1)}deg;--deck-y:${lift.toFixed(0)}px;--deck-z:${index + 1};`;
+    const ariaLabel = `${formatDate(r.date)} ${r.title || '成长照片'}`;
     if (r.mediaType === 'video') {
-      return `<div class="gallery-item" onclick="viewMedia(${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, 'video')">
-        <video data-media-id="${escapeHtml(r.mediaId)}" preload="metadata"></video>
+      return `<button type="button" class="gallery-item" style="${deckStyle}" aria-label="${escapeHtml(ariaLabel)}，点击播放视频" onclick="handleGalleryCardClick(event, ${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, 'video', ${inlineArg(r.id)})">
+        <video data-media-id="${escapeHtml(r.mediaId)}" preload="metadata" muted playsinline></video>
         <div class="play-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>
-        <div class="overlay">
-          <div class="text-xs opacity-80">${formatDate(r.date)}</div>
-          ${contentHtml}
-        </div>
-      </div>`;
+        <div class="overlay"><span class="text-xs">${formatDate(r.date)}</span><span class="text-xs">播放</span></div>
+      </button>`;
     }
-    return `<div class="gallery-item" onclick="viewMedia(${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, 'image')">
+    return `<button type="button" class="gallery-item" style="${deckStyle}" aria-label="${escapeHtml(ariaLabel)}，点击查看大图" onclick="handleGalleryCardClick(event, ${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, 'image', ${inlineArg(r.id)})">
       <img data-media-id="${escapeHtml(r.mediaId)}" alt="${escapeHtml(r.title)}">
-      <div class="overlay">
-        <div class="text-xs opacity-80">${formatDate(r.date)}</div>
-        ${contentHtml}
-      </div>
-    </div>`;
+      <div class="overlay"><span class="text-xs">${formatDate(r.date)}</span><span class="text-xs">查看</span></div>
+    </button>`;
   }).join('');
+  if (window.innerWidth > 720) {
+    const availableWidth = Math.max(640, grid.clientWidth - 36);
+    const overlap = records.length > 8 ? -70 : -54;
+    const fittedWidth = records.length > 1 ? (availableWidth - overlap * (records.length - 1)) / records.length : 210;
+    grid.style.setProperty('--card-width', `${Math.max(128, Math.min(210, fittedWidth))}px`);
+    grid.style.setProperty('--deck-overlap', `${overlap}px`);
+  } else {
+    grid.style.removeProperty('--card-width');
+    grid.style.removeProperty('--deck-overlap');
+  }
   loadMediaElements();
+}
+
+function handleGalleryCardClick(event, mediaId, title, mediaType, itemId) {
+  const grid = document.getElementById('gallery-grid');
+  const item = event.currentTarget;
+  if (window.matchMedia('(hover: none), (pointer: coarse)').matches && !item.classList.contains('is-active')) {
+    event.preventDefault();
+    if (grid) grid.querySelectorAll('.gallery-item.is-active').forEach(active => active.classList.remove('is-active'));
+    item.classList.add('is-active');
+    return;
+  }
+  viewMedia(mediaId, title, mediaType, 'gallery', itemId);
 }
 
 function mediaPickerCard(record, selected, toggleFunction) {
@@ -844,14 +1075,14 @@ function mediaPickerCard(record, selected, toggleFunction) {
 
 async function openGalleryManager() {
   if (!FSAdapter.isAvailable && !(await connectAndStart())) return;
-  const records = DB.getRecords().filter(r => r.mediaId);
-  galleryDraftSelection = new Set(records.filter(r => r.showInGallery !== false).map(r => r.id));
+  const records = getSelectableMediaEntries();
+  galleryDraftSelection = new Set(records.filter(r => r.gallerySelected).map(r => r.id));
   renderGalleryManager();
   openModal('modal-gallery-manager');
 }
 
 function renderGalleryManager() {
-  const records = DB.getRecords().filter(r => r.mediaId);
+  const records = getSelectableMediaEntries();
   const grid = document.getElementById('gallery-manager-grid');
   const empty = document.getElementById('gallery-manager-empty');
   grid.innerHTML = records.map(r => mediaPickerCard(r, galleryDraftSelection.has(r.id), 'toggleGallerySelection')).join('');
@@ -867,6 +1098,9 @@ function toggleGallerySelection(id) {
 
 async function saveGallerySelection() {
   DB.getRecords().filter(r => r.mediaId).forEach(r => { r.showInGallery = galleryDraftSelection.has(r.id); });
+  (DB.data.milestones || [])
+    .filter(m => m.mediaId && (!m.childId || m.childId === DB.data.activeChildId))
+    .forEach(m => { m.showInGallery = galleryDraftSelection.has(m.id); });
   await DB.save();
   renderGallery();
   closeModal('modal-gallery-manager');
@@ -874,7 +1108,7 @@ async function saveGallerySelection() {
 }
 
 function getPrintablePhotoRecords() {
-  return DB.getRecords().filter(r => r.mediaId && r.mediaType !== 'video');
+  return getSelectableMediaEntries().filter(r => r.mediaType !== 'video');
 }
 
 function renderProjectPhotoPicker() {
@@ -912,7 +1146,7 @@ function selectProjectPrintSize(sizeId) {
 
 function openPhotoProjectModal() {
   const records = getPrintablePhotoRecords();
-  projectSelection = new Set(records.filter(r => r.showInGallery !== false).map(r => r.id));
+  projectSelection = new Set(records.filter(r => r.gallerySelected).map(r => r.id));
   currentProjectType = 'calendar';
   currentProjectTemplate = PROJECT_TEMPLATES.calendar[0].id;
   currentProjectPrintSize = 'a4-portrait';
@@ -1262,7 +1496,17 @@ function switchChild(id) { DB.data.activeChildId = id; DB.save(); renderAll(); }
 function switchTimelineFilter(f) { currentTimelineFilter = f; document.querySelectorAll('#timeline-filters .chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f)); renderTimeline(); }
 function switchMetric(m) { currentMetric = m; document.querySelectorAll('[data-metric]').forEach(b => b.classList.toggle('active', b.dataset.metric === m)); renderGrowthChart(); }
 function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+  if (id === 'modal-image-viewer') {
+    const viewer = document.getElementById('viewer-container');
+    viewer.querySelectorAll('video').forEach(video => video.pause());
+    viewer.innerHTML = '';
+    viewerItems = [];
+    viewerIndex = -1;
+    viewerRenderToken++;
+  }
+}
 
 async function openRecordModal(recordId = null) {
   if (!FSAdapter.isAvailable && !(await connectAndStart())) {
@@ -1299,7 +1543,7 @@ async function openMilestoneModal(id = null) {
     toast('连接存储文件夹后即可添加或编辑里程碑');
     return;
   }
-  currentMilestoneMediaBlob = null; editingMilestoneId = id;
+  currentMilestoneMediaBlob = null; currentMilestoneMediaType = 'image'; editingMilestoneId = id;
   const form = document.getElementById('milestone-form'); form.reset();
   const preview = document.getElementById('milestone-media-preview'); const placeholder = document.getElementById('milestone-upload-placeholder'); const area = document.getElementById('milestone-media-upload-area');
   preview.innerHTML = ''; preview.classList.add('hidden'); placeholder.classList.remove('hidden'); area.classList.remove('has-image');
@@ -1311,7 +1555,7 @@ async function openMilestoneModal(id = null) {
     document.getElementById('milestone-name').value = m.name || '';
     document.getElementById('milestone-date').value = m.date || new Date().toISOString().slice(0, 10);
     deleteBtn.classList.remove('hidden');
-    if (m.mediaId) { getMediaUrl(m.mediaId).then(url => { if (url) { preview.innerHTML = `<img src="${escapeHtml(url)}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;">`; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); area.classList.add('has-image'); } }); }
+    if (m.mediaId) { getMediaUrl(m.mediaId).then(url => { if (url) { currentMilestoneMediaType = m.mediaType === 'video' ? 'video' : 'image'; preview.innerHTML = currentMilestoneMediaType === 'video' ? `<video src="${escapeHtml(url)}" controls playsinline style="width:100%;max-height:250px;border-radius:12px;"></video>` : `<img src="${escapeHtml(url)}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;">`; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); area.classList.add('has-image'); } }); }
   } else {
     document.getElementById('milestone-modal-title').textContent = '添加里程碑';
     document.getElementById('milestone-date').value = new Date().toISOString().slice(0, 10);
@@ -1328,27 +1572,52 @@ async function handleMilestoneSubmit(e) {
   if (!name) { toast('请输入里程碑名称'); return; }
   
   let mediaId = null;
+  let reusedMedia = false;
   const oldM = editingMilestoneId ? DB.data.milestones.find(m => m.id === editingMilestoneId) : null;
   const oldMediaId = oldM ? oldM.mediaId : null;
+  let mediaType = oldM && oldM.mediaType === 'video' ? 'video' : 'image';
   
   if (currentMilestoneMediaBlob) {
-    try { const blob = await compressImage(currentMilestoneMediaBlob, 1200, 0.8); mediaId = await FSAdapter.saveMedia(blob, 'jpg'); } 
-    catch (err) { toast("照片保存失败"); return; }
+    try {
+      mediaType = currentMilestoneMediaType;
+      let blob = currentMilestoneMediaBlob;
+      let ext = 'jpg';
+      const originalExt = (currentMilestoneMediaBlob.name.split('.').pop() || '').toLowerCase();
+      if (!['heic', 'heif'].includes(originalExt)) {
+        const existingMediaId = await FSAdapter.findMatchingMedia(currentMilestoneMediaBlob);
+        if (existingMediaId) { mediaId = existingMediaId; reusedMedia = true; }
+      }
+      if (mediaType === 'image') {
+        if (['heic', 'heif'].includes(originalExt)) {
+          if (typeof HeicTo !== 'function') throw new Error('HEIC 转换组件未加载，请联网后重试');
+          blob = await HeicTo({ blob: currentMilestoneMediaBlob, type: 'image/jpeg', quality: 0.9 });
+        }
+        if (!mediaId) blob = await compressImage(blob, 1200, 0.8);
+      }
+      else {
+        ext = ['mp4', 'mov', 'webm', 'm4v'].includes(originalExt) ? originalExt : 'mp4';
+      }
+      if (!mediaId) {
+        const saved = await FSAdapter.saveMediaDeduplicated(blob, ext);
+        mediaId = saved.mediaId;
+        reusedMedia = saved.reused;
+      }
+    } catch (err) { console.error(err); toast("照片或视频保存失败"); return; }
   } else if (oldMediaId) { mediaId = oldMediaId; }
   
   if (editingMilestoneId) {
-    await DB.updateMilestone(editingMilestoneId, { name, date, mediaId }, oldMediaId);
-    toast('里程碑已更新');
+    await DB.updateMilestone(editingMilestoneId, { name, date, mediaId, mediaType }, oldMediaId);
+    toast(reusedMedia ? '里程碑已更新，已复用已有文件' : '里程碑已更新');
   } else {
-    await DB.addMilestone({ name, date, mediaId, childId: DB.data.activeChildId });
-    toast('里程碑已添加');
+    await DB.addMilestone({ name, date, mediaId, mediaType, childId: DB.data.activeChildId });
+    toast(reusedMedia ? '里程碑已添加，已复用已有文件' : '里程碑已添加');
   }
   closeModal('modal-milestone'); renderAll();
 }
 
 async function deleteMilestone() {
   if (!editingMilestoneId) return;
-  if (confirm('确定删除这个里程碑吗？相关照片也会被删除。')) {
+  if (confirm('确定删除这个里程碑吗？相关照片或视频也会被删除。')) {
     await DB.removeMilestone(editingMilestoneId);
     closeModal('modal-milestone'); renderAll(); toast('里程碑已删除');
   }
@@ -1358,9 +1627,117 @@ function openSettings() { renderChildrenList(); openModal('modal-settings'); }
 function openChildModal(child = null) { const form = document.getElementById('child-form'); form.reset(); if (child) { document.getElementById('child-modal-title').textContent = '编辑孩子'; form.elements['rec_id'].value = child.id; form.elements['nickname'].value = child.nickname; form.elements['name'].value = child.name || ''; form.elements['birthdate'].value = child.birthdate; form.elements['gender'].value = child.gender; } else { document.getElementById('child-modal-title').textContent = '添加孩子'; form.elements['rec_id'].value = ''; } openModal('modal-child'); }
 function editChild(id) { const c = DB.data.children.find(c => c.id === id); openChildModal(c); }
 async function deleteChild(id) { if (!FSAdapter.isAvailable && !(await connectAndStart())) return; if (confirm('确定删除这个孩子档案吗？')) { if (await DB.removeChild(id)) { renderChildrenList(); renderAll(); toast('已删除'); } else toast('至少保留一个孩子档案'); } }
-async function viewMedia(mediaId, caption, type = 'image') { const container = document.getElementById('viewer-container'); const closeBtn = `<button onclick="closeModal('modal-image-viewer')" class="absolute -top-12 right-0 text-white p-2 hover:opacity-70"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`; const url = await getMediaUrl(mediaId); if (!url) { toast("无法加载"); return; } const safeUrl = escapeHtml(url); const safeCaption = escapeHtml(caption || ''); if (type === 'video') container.innerHTML = `${closeBtn}<video src="${safeUrl}" controls autoplay class="w-full rounded-2xl max-h-[80vh]"></video><div class="text-white mt-4 text-center">${safeCaption}</div>`; else container.innerHTML = `${closeBtn}<img src="${safeUrl}" class="w-full rounded-2xl max-h-[80vh] object-contain"><div class="text-white mt-4 text-center">${safeCaption}</div>`; openModal('modal-image-viewer'); }
+
+function getMediaViewerCollection(context = 'auto') {
+  if (context === 'gallery') return getSelectableMediaEntries().filter(item => item.gallerySelected);
+  if (context === 'milestone') {
+    return getMilestoneEntries()
+      .filter(item => item.mediaId)
+      .map(item => ({ ...item, title: item.displayName, content: item.content || '' }));
+  }
+  if (context === 'timeline-photo') return DB.getRecords().filter(item => item.type === 'photo' && item.mediaId);
+  if (context === 'timeline') return getTimelineEntries().filter(item => item.mediaId);
+  return getSelectableMediaEntries();
+}
+
+function getViewerDisplayTitle(item) {
+  const title = getPrintableRecordTitle({ ...item, title: item.title || item.displayName || item.name || '' });
+  if (/^(?:IMG|DSC|PXL|MVIMG|VID|MOV)[_-]?\d/i.test(title)) return '';
+  return title;
+}
+
+async function renderMediaViewer() {
+  const container = document.getElementById('viewer-container');
+  const item = viewerItems[viewerIndex];
+  if (!container || !item) return;
+  const renderToken = ++viewerRenderToken;
+  container.querySelectorAll('video').forEach(video => video.pause());
+  container.innerHTML = '<div class="viewer-stage"><div class="text-white text-sm" style="opacity:.72;">正在加载...</div></div>';
+  const url = await getMediaUrl(item.mediaId);
+  if (renderToken !== viewerRenderToken || !document.getElementById('modal-image-viewer').classList.contains('active')) return;
+  if (!url) { toast('无法加载'); return; }
+
+  const safeUrl = escapeHtml(url);
+  const isVideo = item.mediaType === 'video';
+  const dateText = item.date ? formatDate(item.date) : '';
+  const titleText = getViewerDisplayTitle(item);
+  const hasMultiple = viewerItems.length > 1;
+  const previousButton = hasMultiple ? `<button type="button" class="viewer-nav prev" onclick="event.stopPropagation(); navigateMediaViewer(-1)" aria-label="上一张" title="上一张"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>` : '';
+  const nextButton = hasMultiple ? `<button type="button" class="viewer-nav next" onclick="event.stopPropagation(); navigateMediaViewer(1)" aria-label="下一张" title="下一张"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>` : '';
+  const closeButton = `<button type="button" class="viewer-close" onclick="event.stopPropagation(); closeModal('modal-image-viewer')" aria-label="关闭" title="关闭"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  const media = isVideo
+    ? `<video src="${safeUrl}" class="viewer-media" controls autoplay playsinline></video>`
+    : `<img src="${safeUrl}" class="viewer-media" alt="${escapeHtml(titleText || dateText || '成长照片')}">`;
+  const meta = dateText || titleText
+    ? `<div class="viewer-meta"><span>${escapeHtml(dateText)}</span>${titleText ? `<span class="viewer-meta-title">${escapeHtml(titleText)}</span>` : ''}</div>`
+    : '';
+  container.innerHTML = `<div class="viewer-shell">${closeButton}<div class="viewer-stage">${previousButton}${media}${nextButton}</div>${meta}</div>`;
+}
+
+function navigateMediaViewer(delta) {
+  if (viewerItems.length < 2) return;
+  viewerIndex = (viewerIndex + delta + viewerItems.length) % viewerItems.length;
+  renderMediaViewer();
+}
+
+function viewMedia(mediaId, caption, type = 'image', context = 'auto', itemId = null) {
+  viewerItems = getMediaViewerCollection(context).filter(item => item.mediaId);
+  viewerIndex = itemId == null ? -1 : viewerItems.findIndex(item => item.id === itemId);
+  if (viewerIndex < 0) viewerIndex = viewerItems.findIndex(item => item.mediaId === mediaId);
+  if (viewerIndex < 0) {
+    viewerItems = [{ mediaId, title: caption || '', mediaType: type, date: '' }];
+    viewerIndex = 0;
+  }
+  openModal('modal-image-viewer');
+  renderMediaViewer();
+}
 async function changeFolder() { const connected = await FSAdapter.connectNewFolder(); if (!connected) return false; const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('需要授权文件夹读写权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); closeModal('modal-settings'); toast('已切换文件夹'); return true; }
-async function handleRecordSubmit(e) { e.preventDefault(); const formData = new FormData(e.target); const recordData = { type: currentType, date: formData.get('date'), title: formData.get('title'), content: formData.get('content') || '', showInGallery: formData.get('showInGallery') === 'on' }; if (currentType === 'measurement') recordData.measurements = { height: parseFloat(formData.get('height')) || null, weight: parseFloat(formData.get('weight')) || null, head: parseFloat(formData.get('head')) || null }; const oldR = editingRecordId ? DB.data.records.find(r => r.id === editingRecordId) : null; const oldMediaId = oldR ? oldR.mediaId : null; if (currentMediaBlob) { try { const ext = currentMediaType === 'video' ? 'mp4' : 'jpg'; let blob = currentMediaBlob; if (currentMediaType === 'image') blob = await compressImage(currentMediaBlob, 1920, 0.85); const fn = await FSAdapter.saveMedia(blob, ext); recordData.mediaId = fn; recordData.mediaType = currentMediaType; } catch (err) { toast("保存失败"); return; } } else if (oldR && oldR.mediaId) { recordData.mediaId = oldR.mediaId; recordData.mediaType = oldR.mediaType; } if (editingRecordId) { await DB.updateRecord(editingRecordId, recordData, oldMediaId); toast('记录已更新'); } else { await DB.addRecord(recordData); toast('记录已保存'); } closeModal('modal-record'); editingRecordId = null; renderAll(); }
+async function handleRecordSubmit(e) {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const recordData = { type: currentType, date: formData.get('date'), title: formData.get('title'), content: formData.get('content') || '', showInGallery: formData.get('showInGallery') === 'on' };
+  if (currentType === 'measurement') recordData.measurements = { height: parseFloat(formData.get('height')) || null, weight: parseFloat(formData.get('weight')) || null, head: parseFloat(formData.get('head')) || null };
+  const oldR = editingRecordId ? DB.data.records.find(r => r.id === editingRecordId) : null;
+  const oldMediaId = oldR ? oldR.mediaId : null;
+  let reusedMedia = false;
+  if (currentMediaBlob) {
+    try {
+      const originalExt = (currentMediaBlob.name.split('.').pop() || '').toLowerCase();
+      let mediaId = null;
+      let blob = currentMediaBlob;
+      let ext = currentMediaType === 'video' ? (['mp4', 'mov', 'webm', 'm4v'].includes(originalExt) ? originalExt : 'mp4') : 'jpg';
+      if (!['heic', 'heif'].includes(originalExt)) {
+        mediaId = await FSAdapter.findMatchingMedia(currentMediaBlob);
+        reusedMedia = !!mediaId;
+      }
+      if (!mediaId && currentMediaType === 'image') {
+        if (['heic', 'heif'].includes(originalExt)) {
+          if (typeof HeicTo !== 'function') throw new Error('HEIC 转换组件未加载，请联网后重试');
+          blob = await HeicTo({ blob: currentMediaBlob, type: 'image/jpeg', quality: 0.9 });
+        }
+        blob = await compressImage(blob, 1920, 0.85);
+      }
+      if (!mediaId) {
+        const saved = await FSAdapter.saveMediaDeduplicated(blob, ext);
+        mediaId = saved.mediaId;
+        reusedMedia = saved.reused;
+      }
+      recordData.mediaId = mediaId;
+      recordData.mediaType = currentMediaType;
+    } catch (err) { console.error(err); toast(err && err.message ? err.message : '保存失败'); return; }
+  } else if (oldR && oldR.mediaId) {
+    recordData.mediaId = oldR.mediaId;
+    recordData.mediaType = oldR.mediaType;
+  }
+  if (editingRecordId) {
+    await DB.updateRecord(editingRecordId, recordData, oldMediaId);
+    toast(reusedMedia ? '记录已更新，已复用已有文件' : '记录已更新');
+  } else {
+    await DB.addRecord(recordData);
+    toast(reusedMedia ? '记录已保存，已复用已有文件' : '记录已保存');
+  }
+  closeModal('modal-record'); editingRecordId = null; renderAll();
+}
 async function handleChildSubmit(e) { e.preventDefault(); if (!FSAdapter.isAvailable && !(await connectAndStart())) return; const formData = new FormData(e.target); const data = { nickname: formData.get('nickname'), name: formData.get('name'), birthdate: formData.get('birthdate'), gender: formData.get('gender') }; const id = formData.get('rec_id'); if (id) { await DB.updateChild(id, data); toast('已更新'); } else { await DB.addChild(data); toast('已添加'); } closeModal('modal-child'); renderChildrenList(); renderAll(); }
 async function connectAndStart() { if (!window.showDirectoryPicker) { setStorageMode(false, '当前浏览器不支持直接保存到文件夹。请使用电脑端 Chrome 或 Edge；示例内容仍可浏览。'); toast('请使用电脑端 Chrome 或 Edge 连接文件夹'); return false; } const connected = await FSAdapter.connectNewFolder(); if (!connected) return false; const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('需要授权文件夹读写权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); document.getElementById('permission-banner').style.display = 'none'; toast('已连接，今后的记录会保存到这个文件夹'); return true; }
 async function grantPermission() { const hasPerm = await FSAdapter.verifyPermission(); if (!hasPerm) { toast('未获得文件夹权限'); return false; } await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); document.getElementById('permission-banner').style.display = 'none'; return true; }
@@ -1402,8 +1779,18 @@ async function scanAndImportMedia() {
     const imported = new Set(DB.data.importedMedia || []);
     const seenFingerprints = new Set(imported);
     const referencedMediaIds = new Set((DB.data.records || []).map(record => record.mediaId).filter(Boolean));
+    (DB.data.milestones || []).forEach(milestone => { if (milestone.mediaId) referencedMediaIds.add(milestone.mediaId); });
     const candidates = [];
     const stats = { duplicates: 0, heic: 0, zeroBytes: 0, incomplete: 0, unsupported: 0 };
+
+    for (const mediaId of referencedMediaIds) {
+      if (!mediaId || mediaId.startsWith('http')) continue;
+      try {
+        const referencedHandle = await FSAdapter.mediaDir.getFileHandle(mediaId);
+        const referencedFile = await referencedHandle.getFile();
+        seenFingerprints.add(await calculateMediaFingerprint(referencedFile));
+      } catch (e) {}
+    }
 
     const inspectDirectory = async (directory, location) => {
       for await (const entry of directory.values()) {
@@ -1413,11 +1800,13 @@ async function scanAndImportMedia() {
         if (!file.size) { stats.zeroBytes++; continue; }
         if (kind === 'incomplete') { stats.incomplete++; continue; }
         if (kind === 'unsupported') { stats.unsupported++; continue; }
-        const fingerprint = `${file.name.toLowerCase()}|${file.size}|${file.lastModified}`;
-        if (seenFingerprints.has(fingerprint) || (location === 'media' && referencedMediaIds.has(entry.name))) {
+        const legacyFingerprint = `${file.name.toLowerCase()}|${file.size}|${file.lastModified}`;
+        const fingerprint = await calculateMediaFingerprint(file);
+        if (seenFingerprints.has(legacyFingerprint) || seenFingerprints.has(fingerprint) || (location === 'media' && referencedMediaIds.has(entry.name))) {
           stats.duplicates++;
           continue;
         }
+        seenFingerprints.add(legacyFingerprint);
         seenFingerprints.add(fingerprint);
         candidates.push({ entry, file, fingerprint, kind, location });
       }
@@ -1438,14 +1827,14 @@ async function scanAndImportMedia() {
     let convertedCount = 0;
     let failedCount = 0;
     const failedFiles = [];
+    const failedDetails = [];
     for (const item of candidates) {
       try {
         let mediaId;
         let mediaType = item.kind;
         if (item.kind === 'heic') {
-          if (typeof heic2any !== 'function') throw new Error('HEIC 转换组件未加载，请检查网络后重试');
-          const conversion = await heic2any({ blob: item.file, toType: 'image/jpeg', quality: 0.9 });
-          const convertedBlob = Array.isArray(conversion) ? conversion[0] : conversion;
+          if (typeof HeicTo !== 'function') throw new Error('新版 HEIC 转换组件未加载，请检查网络后重试');
+          const convertedBlob = await HeicTo({ blob: item.file, type: 'image/jpeg', quality: 0.9 });
           const optimizedBlob = await compressImage(convertedBlob, 2400, 0.9);
           mediaId = await FSAdapter.saveMedia(optimizedBlob, 'jpg');
           mediaType = 'image';
@@ -1473,6 +1862,8 @@ async function scanAndImportMedia() {
       } catch (itemError) {
         failedCount++;
         failedFiles.push(item.file.name);
+        const errorMessage = itemError && itemError.message ? itemError.message : String(itemError || '未知错误');
+        failedDetails.push(`${item.file.name}：${errorMessage}`);
         console.error(`导入失败：${item.file.name}`, itemError);
       }
     }
@@ -1481,7 +1872,7 @@ async function scanAndImportMedia() {
     closeModal('modal-settings');
     const successCount = candidates.length - failedCount;
     toast(`已导入 ${successCount} 个（复制 ${copiedCount}、关联 ${linkedCount}、HEIC 转 JPG ${convertedCount}）${failedCount ? `，失败 ${failedCount} 个` : ''}`);
-    if (failedFiles.length) alert(`有 ${failedFiles.length} 个文件转换或导入失败：\n${failedFiles.slice(0, 10).join('\n')}${failedFiles.length > 10 ? '\n……' : ''}\n\n原文件没有改动，可以检查网络后再次扫描。`);
+    if (failedFiles.length) alert(`有 ${failedFiles.length} 个文件转换或导入失败：\n${failedDetails.slice(0, 6).join('\n')}${failedDetails.length > 6 ? '\n……' : ''}\n\n原文件没有改动，可按上面的原因处理后再次扫描。`);
   } catch (err) {
     console.error(err);
     alert(`扫描或导入失败：${err && err.message ? err.message : '请重新连接文件夹后再试'}`);
@@ -1490,12 +1881,55 @@ async function scanAndImportMedia() {
 
 function bindEvents() {
   const tc = document.getElementById('timeline-container');
-  if (tc) tc.addEventListener('click', async (e) => { const eb = e.target.closest('.edit-btn'); const db = e.target.closest('.delete-btn'); if (eb) { e.stopPropagation(); openRecordModal(eb.dataset.id); } else if (db) { e.stopPropagation(); await deleteRecord(db.dataset.id); } });
+  if (tc) tc.addEventListener('click', async (e) => {
+    const editButton = e.target.closest('.edit-btn');
+    const deleteButton = e.target.closest('.delete-btn');
+    if (editButton) {
+      e.stopPropagation();
+      if (editButton.dataset.source === 'milestone') openMilestoneModal(editButton.dataset.id);
+      else openRecordModal(editButton.dataset.id);
+    } else if (deleteButton) {
+      e.stopPropagation();
+      if (deleteButton.dataset.source === 'milestone') await deleteMilestoneEntryConfirm('milestone', deleteButton.dataset.id);
+      else await deleteRecord(deleteButton.dataset.id);
+    }
+  });
   document.querySelectorAll('#timeline-filters .chip').forEach(c => c.addEventListener('click', () => switchTimelineFilter(c.dataset.filter)));
   const mi = document.getElementById('media-input');
   if (mi) mi.addEventListener('change', async (e) => { const file = e.target.files[0]; if (!file) return; try { currentMediaBlob = file; const p = document.getElementById('media-preview'); const ph = document.getElementById('upload-placeholder'); const a = document.getElementById('media-upload-area'); if (file.type.startsWith('image/')) { currentMediaType = 'image'; p.innerHTML = `<img src="${URL.createObjectURL(file)}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;">`; } else if (file.type.startsWith('video/')) { currentMediaType = 'video'; p.innerHTML = `<video src="${URL.createObjectURL(file)}" controls style="width:100%;max-height:250px;border-radius:12px;"></video>`; } else { toast('不支持'); return; } p.classList.remove('hidden'); ph.classList.add('hidden'); a.classList.add('has-image'); } catch (err) { toast('处理失败'); } });
   const mmi = document.getElementById('milestone-media-input');
-  if (mmi) mmi.addEventListener('change', async (e) => { const file = e.target.files[0]; if (!file) return; try { currentMilestoneMediaBlob = file; const p = document.getElementById('milestone-media-preview'); const ph = document.getElementById('milestone-upload-placeholder'); const a = document.getElementById('milestone-media-upload-area'); p.innerHTML = `<img src="${URL.createObjectURL(file)}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;">`; p.classList.remove('hidden'); ph.classList.add('hidden'); a.classList.add('has-image'); } catch (err) { toast('处理失败'); } });
+  if (mmi) mmi.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const p = document.getElementById('milestone-media-preview');
+      const ph = document.getElementById('milestone-upload-placeholder');
+      const a = document.getElementById('milestone-media-upload-area');
+      const fileExt = (file.name.split('.').pop() || '').toLowerCase();
+      const isImage = file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'].includes(fileExt);
+      const isVideo = file.type.startsWith('video/') || ['mp4', 'mov', 'webm', 'm4v'].includes(fileExt);
+      if (isImage) {
+        currentMilestoneMediaType = 'image';
+        p.innerHTML = ['heic', 'heif'].includes(fileExt)
+          ? `<div style="height:160px;display:flex;align-items:center;justify-content:center;color:var(--muted);">HEIC 照片将在保存时自动转为 JPG</div>`
+          : `<img src="${URL.createObjectURL(file)}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;">`;
+      } else if (isVideo) {
+        currentMilestoneMediaType = 'video';
+        p.innerHTML = `<video src="${URL.createObjectURL(file)}" controls playsinline style="width:100%;max-height:250px;border-radius:12px;"></video>`;
+      } else {
+        e.target.value = ''; toast('请选择照片或视频文件'); return;
+      }
+      currentMilestoneMediaBlob = file;
+      p.classList.remove('hidden'); ph.classList.add('hidden'); a.classList.add('has-image');
+    } catch (err) { toast('照片或视频处理失败'); }
+  });
+  document.addEventListener('keydown', (event) => {
+    const viewerModal = document.getElementById('modal-image-viewer');
+    if (!viewerModal?.classList.contains('active')) return;
+    if (event.key === 'ArrowLeft') { event.preventDefault(); navigateMediaViewer(-1); }
+    else if (event.key === 'ArrowRight') { event.preventDefault(); navigateMediaViewer(1); }
+    else if (event.key === 'Escape') { event.preventDefault(); closeModal('modal-image-viewer'); }
+  });
 }
 
 async function initApp() {
