@@ -229,9 +229,13 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 .print-photo.crop-frame { display: block; }
 .book-layout-grid .crop-frame { flex: 1; min-height: 0; border-radius: 8px; }
 .book-layout-grid .crop-frame > img { border-radius: inherit; }
+.project-preview .crop-frame.crop-direct-drag { cursor: ns-resize; touch-action: pan-x; user-select: none; }
+.project-preview .crop-frame.crop-direct-drag.dragging { cursor: grabbing; }
+.crop-drag-hint { position: absolute; z-index: 3; left: 10px; bottom: 10px; padding: 6px 9px; border-radius: 999px; color: white; background: rgba(45,42,38,0.7); backdrop-filter: blur(6px); font-size: 11px; opacity: 0; transform: translateY(4px); transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+.project-preview .crop-frame:hover .crop-drag-hint, .project-preview .crop-frame.dragging .crop-drag-hint { opacity: 1; transform: translateY(0); }
 .crop-adjust-button { position: absolute; z-index: 4; top: 10px; right: 10px; border: 0; border-radius: 999px; padding: 7px 11px; background: rgba(45,42,38,0.82); color: white; font-size: 12px; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
 .crop-adjust-button:hover { background: var(--accent); }
-.crop-editor-stage { position: relative; height: 360px; overflow: hidden; border-radius: 14px; background: #dedbd5; cursor: grab; touch-action: none; user-select: none; }
+.crop-editor-stage { position: relative; width: 100%; height: 360px; margin: 0 auto; overflow: hidden; border-radius: 14px; background: #dedbd5; cursor: grab; touch-action: none; user-select: none; }
 .crop-editor-stage.dragging { cursor: grabbing; }
 .crop-editor-stage img { width: 100%; height: 100%; object-fit: cover; display: block; transform-origin: center; pointer-events: none; }
 .crop-editor-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
@@ -250,7 +254,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
   body.printing-project #print-root { display: block !important; margin: 0 !important; padding: 0 !important; background: white !important; }
   #print-root .print-page { width: var(--print-page-width) !important; height: var(--print-page-height) !important; min-height: 0 !important; max-height: var(--print-page-height) !important; aspect-ratio: auto !important; margin: 0 !important; padding: var(--print-page-padding, 12mm) !important; overflow: hidden !important; box-shadow: none !important; break-after: page !important; page-break-after: always !important; break-inside: avoid !important; page-break-inside: avoid !important; }
   #print-root .print-page:last-child { break-after: auto !important; page-break-after: auto !important; }
-  .crop-adjust-button { display: none !important; }
+  .crop-adjust-button, .crop-drag-hint { display: none !important; }
 }
 .text-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -286,7 +290,19 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 .storage-banner p { margin: 0; font-size: 13px; line-height: 1.55; }
 .storage-banner strong { color: var(--accent-dark); }
 @media (max-width: 640px) { .storage-banner-inner { align-items: flex-start; flex-direction: column; } }
+.mobile-menu { position:relative; display:none; }
+.mobile-menu summary { cursor:pointer; padding:10px; font-size:14px; }
+.mobile-menu-panel { position:absolute; right:0; top:100%; width:230px; padding:18px; display:grid; gap:14px; background:var(--card); border:1px solid var(--border); border-radius:14px; box-shadow:0 12px 35px #0002; z-index:100; }
+.timeline-tools { display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:12px; align-items:end; margin-bottom:16px; }
+.timeline-jump { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:24px; }
+.timeline-jump select { width:auto; max-width:100%; }
+[data-timeline-month] { scroll-margin-top:110px; }
+.backup-preview-list { max-height:150px; overflow:auto; overflow-wrap:anywhere; }
+@media(max-width:767px) { .mobile-menu { display:block; } .timeline-tools { grid-template-columns:1fr 1fr; } .timeline-search-field { grid-column:1 / -1; } }
+@media(max-width:380px) { .nav-bar > div { padding-left:12px; padding-right:12px; gap:4px; } .nav-bar .btn-primary { padding:10px; } }
 </style>
+<link rel="stylesheet" href="./scrapbook.css">
+<link rel="stylesheet" href="./media-studio.css">
 </head>
 <body>
 
@@ -303,6 +319,14 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
       <div><div class="font-serif font-bold text-lg leading-none">成长拾光</div><div id="storage-status" class="text-xs" style="color: var(--muted);">示例体验模式</div></div>
     </div>
     <div id="child-selector" class="child-selector hidden md:flex"></div>
+    <details id="mobile-menu" class="mobile-menu">
+      <summary aria-label="打开菜单">菜单</summary>
+      <div class="mobile-menu-panel">
+        <label for="mobile-child-selector">切换孩子</label>
+        <select id="mobile-child-selector" onchange="switchChild(this.value); document.getElementById('mobile-menu').open=false;"></select>
+        <button class="btn-secondary" onclick="document.getElementById('mobile-menu').open=false; openSettings();">设置与备份</button>
+      </div>
+    </details>
     <div class="flex items-center gap-2">
       <button class="btn-ghost flex items-center gap-1.5" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="回到顶部" title="回到顶部">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
@@ -332,14 +356,15 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
     <div class="float-shape" style="width: 400px; height: 400px; background: var(--accent); top: -100px; right: -50px; opacity: 0.18;"></div>
     <div class="float-shape" style="width: 350px; height: 350px; background: var(--pink); bottom: -100px; left: -50px; opacity: 0.25; animation-delay: -8s;"></div>
     <div class="max-w-7xl mx-auto px-6 py-16 md:py-24 relative">
-      <div class="grid lg:grid-cols-5 gap-12 items-center">
-        <div class="lg:col-span-3">
+      <div class="hero-journal-grid">
+        <div class="hero-journal-copy">
           <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6" style="background: rgba(214,125,62,0.12); color: var(--accent-dark);">
             <span class="w-1.5 h-1.5 rounded-full" style="background: var(--accent);"></span>
             <span class="text-xs font-semibold tracking-wider">GROWTH JOURNAL</span>
           </div>
-          <h1 class="font-serif font-bold leading-[0.95] tracking-tight mb-6" style="font-size: clamp(48px, 7vw, 88px);">记录每一个<br><span style="color: var(--accent);">珍贵的</span>瞬间</h1>
-          <p class="text-lg leading-relaxed max-w-xl mb-8" style="color: var(--fg-soft);">孩子的成长转瞬即逝。从第一次微笑到第一步路，从牙牙学语到蹒跚前行，把那些值得珍藏一辈子的时刻，温柔地记录下来。</p>
+          <h1 class="font-serif font-bold leading-[1.18] tracking-tight mb-6" style="font-size: clamp(38px, 4vw, 62px);">把长大的日子，<br><span style="color: var(--accent);">一页页珍藏。</span></h1>
+          <p class="text-base leading-relaxed max-w-xl mb-6" style="color: var(--fg-soft);">一张照片，一句童言，一个小小的第一次。<br>把平凡又闪亮的日子，收进我们的成长纪念册。</p>
+          <div id="hero-child-card" class="hero-child-summary"></div>
           <div class="flex flex-wrap gap-3">
             <button class="btn-primary" onclick="document.getElementById('growth-section').scrollIntoView({behavior:'smooth'})">成长曲线</button>
             <button class="btn-secondary" onclick="document.getElementById('gallery-section').scrollIntoView({behavior:'smooth'})">浏览照片墙</button>
@@ -347,9 +372,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
             <button class="btn-secondary" onclick="document.getElementById('timeline-section').scrollIntoView({behavior:'smooth'})">成长时间线</button>
           </div>
         </div>
-        <div class="lg:col-span-2">
-          <div id="hero-child-card" class="card p-8 relative" style="background: rgba(255,255,255,0.7); backdrop-filter: blur(10px);"></div>
-        </div>
+        <div id="growth-album" class="album-scene" aria-label="成长纪念册"></div>
       </div>
     </div>
   </section>
@@ -358,6 +381,12 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
     <div id="stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
   </section>
   
+  <section id="growth-film" class="growth-film" aria-labelledby="film-title">
+    <div class="film-heading"><div><span class="journal-eyebrow">一帧一帧，都是你</span><h2 id="film-title" class="font-serif">长大的日子，连成一卷。</h2></div><p id="film-description">向下滚动，慢慢回看</p></div>
+        <div class="film-navigation" aria-label="成长胶卷翻看"><button type="button" id="film-prev" aria-label="向左翻看成长胶卷" aria-controls="film-viewport">←</button><span>左右翻看</span><button type="button" id="film-next" aria-label="向右翻看成长胶卷" aria-controls="film-viewport">→</button></div>
+        <div id="film-viewport" class="film-window" tabindex="0" aria-label="成长胶卷，可左右滑动或使用方向键"><div id="film-track" class="film-track"></div></div>
+    <div class="film-footer"><span id="film-count"></span><span>OUR LITTLE DAYS · 成长胶卷</span></div>
+  </section>
   <section id="gallery-section" class="py-20 md:py-28" style="background: var(--bg-2);">
     <div class="max-w-7xl mx-auto px-6">
       <div class="mb-12 reveal flex flex-col md:flex-row md:items-end justify-between gap-5">
@@ -369,6 +398,8 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
         <div class="gallery-actions">
           <button class="btn-secondary" onclick="openGalleryManager()">管理照片墙</button>
           <button class="btn-primary" onclick="openPhotoProjectModal()">制作照片作品</button>
+          <button class="btn-secondary" onclick="MediaStudio.open('meme')">制作表情包</button>
+          <button class="btn-secondary" onclick="MediaStudio.open('video')">生成成长视频</button>
         </div>
       </div>
       <div id="gallery-grid" class="gallery-grid reveal"></div>
@@ -432,6 +463,13 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
         <button class="chip active" data-filter="photo">照片</button>
       </div>
     </div>
+    <div class="timeline-tools">
+      <div class="timeline-search-field"><label for="timeline-search">搜索标题或正文</label><input id="timeline-search" type="search" placeholder="如：生日、第一次走路" oninput="updateTimelineQuery()" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:11px;background:var(--card);"></div>
+      <div><label for="timeline-year">年份</label><select id="timeline-year" onchange="updateTimelineQuery()"><option value="">全部年份</option></select></div>
+      <div><label for="timeline-month">月份</label><select id="timeline-month" onchange="updateTimelineQuery()"><option value="">全部月份</option><option value="01">1月</option><option value="02">2月</option><option value="03">3月</option><option value="04">4月</option><option value="05">5月</option><option value="06">6月</option><option value="07">7月</option><option value="08">8月</option><option value="09">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select></div>
+      <button class="btn-secondary" onclick="resetTimelineQuery()">清空筛选</button>
+    </div>
+    <div class="timeline-jump"><label for="timeline-jump" style="margin:0;">跳转到</label><select id="timeline-jump"><option value="">选择年月</option></select><button class="btn-secondary" onclick="jumpToTimelineMonth()">跳转</button><span id="timeline-result-count" class="text-sm" role="status" style="color:var(--muted);"></span></div>
     <div id="timeline-container" class="reveal"></div>
   </section>
   
@@ -541,7 +579,11 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
       </div>
       <div class="pt-6 border-t" style="border-color: var(--border-soft);">
         <h4 class="font-semibold text-lg mb-3">数据迁移与存储</h4>
+        <p class="text-xs leading-relaxed mb-3" style="color:var(--muted);">每次保存前会保留上一版数据为 db.backup.json（下次保存会更新）。删除记录不会永久删除照片文件，仍会占用存储空间。需要恢复时，请先复制整个存储文件夹留底，再用备份替换 db.json 并重新连接。完整备份请同时保留 media 文件夹。</p>
         <div class="grid grid-cols-1 gap-3">
+          <button id="full-backup-btn" onclick="createFullBackup()" class="btn-primary justify-center w-full">完整备份（含照片和视频）</button>
+          <button id="restore-backup-btn" onclick="previewFullBackup()" class="btn-secondary justify-center w-full">从完整备份恢复…</button>
+          <p id="backup-status" class="text-xs leading-relaxed" role="status" style="color:var(--muted);">备份保存到独立文件夹，包含孩子档案、成长记录、作品草稿及本地媒体。</p>
           <button onclick="exportData()" class="btn-secondary justify-center w-full">下载并备份文字数据(JSON)</button>
           <input type="file" id="import-json-input" accept=".json" hidden onchange="importJSON(event)">
           <button onclick="document.getElementById('import-json-input').click()" class="btn-secondary justify-center w-full">导入旧版日记文字(JSON)</button>
@@ -600,7 +642,13 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
       <button type="button" onclick="closeModal('modal-photo-project')" class="btn-ghost p-2" aria-label="关闭">×</button>
     </div>
     <div class="p-6 space-y-6">
+      <div class="flex flex-wrap justify-end gap-3 pb-5 border-b" style="border-color:var(--border-soft);">
+        <button class="btn-secondary" onclick="closeModal('modal-photo-project')">取消</button>
+        <button id="build-project-btn" class="btn-primary" onclick="buildPhotoProject()">生成打印预览</button>
+        <button id="print-project-btn" class="btn-primary hidden" onclick="printPhotoProject()">打印 / 保存 PDF</button>
+      </div>
       <div>
+        <p id="project-draft-status" class="text-xs mb-3" role="status"></p>
         <label>选择作品类型</label>
         <div class="project-type-grid">
           <button type="button" class="project-type active" data-project-type="calendar" onclick="selectProjectType('calendar')"><strong class="block">成长台历</strong><span class="text-xs">12个月桌面月历</span></button>
@@ -629,11 +677,6 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
         </div>
         <div id="book-page-list" class="space-y-3"></div>
         <div id="book-page-empty" class="empty-state hidden" style="padding:30px 20px;"><p>还没有内页，点击“新增一页”开始编排</p></div>
-      </div>
-      <div class="flex flex-wrap justify-end gap-3 pt-5 border-t" style="border-color:var(--border-soft);">
-        <button class="btn-secondary" onclick="closeModal('modal-photo-project')">取消</button>
-        <button id="build-project-btn" class="btn-primary" onclick="buildPhotoProject()">生成打印预览</button>
-        <button id="print-project-btn" class="btn-primary hidden" onclick="printPhotoProject()">打印 / 保存 PDF</button>
       </div>
       <div id="project-preview" class="project-preview hidden"></div>
     </div>
@@ -665,6 +708,15 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
   <div id="viewer-container" class="relative max-w-5xl w-full" onclick="event.stopPropagation()"></div>
 </div>
 
+<div id="modal-backup-restore" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="backup-restore-title">
+  <div class="modal-content"><div class="p-6 space-y-4">
+    <h3 id="backup-restore-title" class="font-serif text-2xl font-semibold">恢复备份预览</h3>
+    <div id="backup-restore-summary"></div>
+    <p class="text-sm" style="color:var(--muted);">确认后选择存放位置。会创建新的恢复文件夹，完成后切换到恢复的资料；当前文件夹保持原样。</p>
+    <p id="backup-restore-status" class="text-sm" role="status"></p>
+    <div class="flex gap-3"><button id="cancel-backup-restore" class="btn-secondary" onclick="closeModal('modal-backup-restore')">取消</button><button id="confirm-backup-restore" class="btn-primary" onclick="restoreFullBackup()">选择位置并恢复</button></div>
+  </div></div>
+</div>
 <div id="toast" class="toast"></div>
 
 <script src="./growth-standards.js"></script>
@@ -677,10 +729,53 @@ const FSAdapter = {
   rootDir: null, mediaDir: null, isAvailable: false, urlCache: {},
   async init() { if (!window.showDirectoryPicker) return false; await HandleDB.init(); const savedHandle = await HandleDB.get('rootDir'); if (savedHandle) { this.rootDir = savedHandle; return true; } return false; },
   async verifyPermission() { if (!this.rootDir) return false; try { const opts = { mode: 'readwrite' }; if ((await this.rootDir.queryPermission(opts)) === 'granted') { this.isAvailable = true; return true; } if ((await this.rootDir.requestPermission(opts)) === 'granted') { this.isAvailable = true; return true; } } catch (e) {} this.isAvailable = false; return false; },
-  async connectNewFolder() { try { this.rootDir = await window.showDirectoryPicker({ mode: 'readwrite' }); await HandleDB.set('rootDir', this.rootDir); return true; } catch (e) { return false; } },
+  async connectNewFolder() { try { const nextRoot = await window.showDirectoryPicker({ mode: 'readwrite' }); await this.writeQueue; this.isAvailable = false; this.writeBlocked = true; Object.values(this.urlCache).forEach(url => URL.revokeObjectURL(url)); this.urlCache = {}; this.rootDir = nextRoot; await HandleDB.set('rootDir', this.rootDir); return true; } catch (e) { return false; } },
   async setupDirs() { if (!this.rootDir) return; this.mediaDir = await this.rootDir.getDirectoryHandle('media', { create: true }); },
-  async loadDB() { try { const fileHandle = await this.rootDir.getFileHandle('db.json'); const file = await fileHandle.getFile(); const text = await file.text(); return JSON.parse(text); } catch (e) { return null; } },
-  async saveDB(data) { if (!this.rootDir) throw new Error('尚未连接存储文件夹'); try { const fileHandle = await this.rootDir.getFileHandle('db.json', { create: true }); const writable = await fileHandle.createWritable(); await writable.write(JSON.stringify(data, null, 2)); await writable.close(); return true; } catch (e) { toast("保存失败：" + e.message); throw e; } },
+  writeBlocked: false, writeQueue: Promise.resolve(),
+  async loadDB() {
+    this.writeBlocked = true;
+    let handle;
+    try { handle = await this.rootDir.getFileHandle('db.json'); }
+    catch (error) {
+      if (error.name === 'NotFoundError') { this.writeBlocked = false; return null; }
+      throw new Error('无法读取数据文件，已停止写入：' + error.message);
+    }
+    try {
+      const data = JSON.parse(await (await handle.getFile()).text());
+      if (!data || !Array.isArray(data.children) || !data.children.length || !Array.isArray(data.records)
+        || data.children.some(c => !c || typeof c.id !== 'string' || typeof c.nickname !== 'string')
+        || data.records.some(r => !r || typeof r.id !== 'string')
+        || (data.milestones !== undefined && !Array.isArray(data.milestones))) throw new Error('数据结构不完整');
+      if (!data.children.some(c => c.id === data.activeChildId)) data.activeChildId = data.children[0].id;
+      this.writeBlocked = false;
+      return data;
+    } catch (error) { throw new Error('数据文件损坏或读取失败，原文件未改动：' + error.message); }
+  },
+  async saveDB(data) {
+    if (!this.rootDir || this.writeBlocked) throw new Error('数据尚未安全加载，已停止写入');
+    const root = this.rootDir;
+    const snapshot = JSON.stringify(data, null, 2);
+    const write = async () => {
+      let previous;
+      try { previous = await (await root.getFileHandle('db.json')).getFile(); }
+      catch (error) { if (error.name !== 'NotFoundError') throw error; }
+      if (previous) {
+        const backup = await root.getFileHandle('db.backup.json', { create: true });
+        const stream = await backup.createWritable();
+        try { await stream.write(previous); await stream.close(); }
+        catch (error) { await stream.abort().catch(() => {}); throw error; }
+      }
+      const handle = await root.getFileHandle('db.json', { create: true });
+      const stream = await handle.createWritable();
+      try { await stream.write(snapshot); await stream.close(); }
+      catch (error) { await stream.abort().catch(() => {}); throw error; }
+      return true;
+    };
+    const pending = this.writeQueue.then(write);
+    this.writeQueue = pending.catch(() => {});
+    try { return await pending; }
+    catch (error) { toast('保存失败，旧数据和照片已保留：' + error.message); throw error; }
+  },
   async saveMedia(blob, ext) { const fileName = `media_${Date.now()}.${ext}`; const fileHandle = await this.mediaDir.getFileHandle(fileName, { create: true }); const writable = await fileHandle.createWritable(); await writable.write(blob); await writable.close(); return fileName; },
   async findMatchingMedia(blob) {
     if (!blob || !this.mediaDir) return null;
@@ -763,12 +858,21 @@ const SAMPLE_RECORDS = [
 const DB = {
   data: null,
   async load() {
-    const loadedData = await FSAdapter.loadDB();
+    let loadedData;
+    try { loadedData = await FSAdapter.loadDB(); }
+    catch (error) {
+      FSAdapter.isAvailable = false;
+      setStorageMode(false, error.message);
+      toast(error.message);
+      throw error;
+    }
     if (loadedData && Array.isArray(loadedData.children) && Array.isArray(loadedData.records)) {
       this.data = loadedData;
+      this.committedData = JSON.stringify(loadedData);
       if (!this.data.milestones) this.data.milestones = [];
       if (!this.data.importedMedia) this.data.importedMedia = [];
     } else {
+      this.committedData = null;
       this.data = this.getFreshData();
       await this.save();
     }
@@ -776,18 +880,27 @@ const DB = {
   },
   getDemoData() { return { children: [{ ...SAMPLE_CHILD }], activeChildId: 'c1', records: SAMPLE_RECORDS.map(record => ({ ...record })), milestones: [], importedMedia: [] }; },
   getFreshData() { return { children: [{ ...SAMPLE_CHILD, name: '', nickname: '宝贝', birthdate: new Date().toISOString().slice(0, 10) }], activeChildId: 'c1', records: [], milestones: [], importedMedia: [] }; },
-  async save() { await FSAdapter.saveDB(this.data); },
+  async save() {
+    const snapshot = JSON.stringify(this.data);
+    try { await FSAdapter.saveDB(JSON.parse(snapshot)); this.committedData = snapshot; }
+    catch (error) {
+      if (this.committedData) this.data = JSON.parse(this.committedData);
+      renderAll();
+      throw error;
+    }
+  },
   async addChild(child) { child.id = 'c' + Date.now(); this.data.children.push(child); this.data.activeChildId = child.id; await this.save(); },
   async updateChild(id, updates) { const c = this.data.children.find(c => c.id === id); if (c) { Object.assign(c, updates); await this.save(); } },
   isMediaReferenced(mediaId) { return !!mediaId && (this.data.records.some(r => r.mediaId === mediaId) || (this.data.milestones || []).some(m => m.mediaId === mediaId)); },
-  async deleteMediaIfUnused(mediaId) { if (mediaId && !this.isMediaReferenced(mediaId)) await FSAdapter.deleteMedia(mediaId); },
-  async removeChild(id) { if (this.data.children.length <= 1) return false; const removedRecords = this.data.records.filter(r => r.childId === id); const removedMilestones = (this.data.milestones || []).filter(m => m.childId === id); const mediaIds = [...new Set([...removedRecords, ...removedMilestones].map(item => item.mediaId).filter(Boolean))]; this.data.children = this.data.children.filter(c => c.id !== id); this.data.records = this.data.records.filter(r => r.childId !== id); this.data.milestones = (this.data.milestones || []).filter(m => m.childId !== id); if (this.data.activeChildId === id) this.data.activeChildId = this.data.children[0].id; for (const mediaId of mediaIds) await this.deleteMediaIfUnused(mediaId); await this.save(); return true; },
+  // 保留未引用媒体，确保上一版数据库仍可恢复照片；不在删除记录时永久删除文件。
+  async deleteMediaIfUnused(mediaId) { return; },
+  async removeChild(id) { if (this.data.children.length <= 1) return false; const removedRecords = this.data.records.filter(r => r.childId === id); const removedMilestones = (this.data.milestones || []).filter(m => m.childId === id); const mediaIds = [...new Set([...removedRecords, ...removedMilestones].map(item => item.mediaId).filter(Boolean))]; this.data.children = this.data.children.filter(c => c.id !== id); this.data.records = this.data.records.filter(r => r.childId !== id); this.data.milestones = (this.data.milestones || []).filter(m => m.childId !== id); if (this.data.activeChildId === id) this.data.activeChildId = this.data.children[0].id; await this.save(); for (const mediaId of mediaIds) await this.deleteMediaIfUnused(mediaId); return true; },
   async addRecord(record) { record.id = 'r' + Date.now(); record.childId = this.data.activeChildId; this.data.records.push(record); await this.save(); },
-  async updateRecord(id, updatedData, oldMediaId) { const idx = this.data.records.findIndex(r => r.id === id); if (idx !== -1) { const oldRecord = this.data.records[idx]; this.data.records[idx] = { ...oldRecord, ...updatedData }; if (updatedData.mediaId !== oldMediaId) await this.deleteMediaIfUnused(oldMediaId); await this.save(); } },
-  async removeRecord(id) { const record = this.data.records.find(r => r.id === id); this.data.records = this.data.records.filter(r => r.id !== id); if (record) await this.deleteMediaIfUnused(record.mediaId); await this.save(); },
+  async updateRecord(id, updatedData, oldMediaId) { const idx = this.data.records.findIndex(r => r.id === id); if (idx !== -1) { const oldRecord = this.data.records[idx]; this.data.records[idx] = { ...oldRecord, ...updatedData }; await this.save(); if (updatedData.mediaId !== oldMediaId) await this.deleteMediaIfUnused(oldMediaId); } },
+  async removeRecord(id) { const record = this.data.records.find(r => r.id === id); this.data.records = this.data.records.filter(r => r.id !== id); await this.save(); if (record) await this.deleteMediaIfUnused(record.mediaId); },
   async addMilestone(m) { m.id = 'm' + Date.now(); this.data.milestones.push(m); await this.save(); },
-  async updateMilestone(id, updates, oldMediaId) { const m = this.data.milestones.find(m => m.id === id); if (m) { Object.assign(m, updates); if (updates.mediaId !== oldMediaId) await this.deleteMediaIfUnused(oldMediaId); await this.save(); } },
-  async removeMilestone(id) { const m = this.data.milestones.find(m => m.id === id); this.data.milestones = this.data.milestones.filter(m => m.id !== id); if (m) await this.deleteMediaIfUnused(m.mediaId); await this.save(); },
+  async updateMilestone(id, updates, oldMediaId) { const m = this.data.milestones.find(m => m.id === id); if (m) { Object.assign(m, updates); await this.save(); if (updates.mediaId !== oldMediaId) await this.deleteMediaIfUnused(oldMediaId); } },
+  async removeMilestone(id) { const m = this.data.milestones.find(m => m.id === id); this.data.milestones = this.data.milestones.filter(m => m.id !== id); await this.save(); if (m) await this.deleteMediaIfUnused(m.mediaId); },
   getActiveChild() { return this.data.children.find(c => c.id === this.data.activeChildId); },
   getRecords(childId = null) { const cid = childId || this.data.activeChildId; return this.data.records.filter(r => r.childId === cid).sort((a, b) => new Date(b.date) - new Date(a.date)); },
   getMeasurements(childId = null) { return this.getRecords(childId).filter(r => r.type === 'measurement' && r.measurements).sort((a, b) => new Date(a.date) - new Date(b.date)); }
@@ -805,6 +918,7 @@ let currentTimelineFilter = 'photo', currentMetric = 'height', growthChart = nul
 let galleryDraftSelection = new Set(), projectSelection = new Set(), currentProjectType = 'calendar', currentProjectTemplate = 'calendar-warm', currentProjectPrintSize = 'a4-portrait';
 let bookPages = [], bookPageSerial = 0;
 let projectCrops = new Map(), activeCropKey = '', cropDraft = { x: 50, y: 50, zoom: 1 }, cropDragState = null;
+let previewCropDragState = null;
 let viewerItems = [], viewerIndex = -1, viewerRenderToken = 0;
 const PRINT_SIZE_PRESETS = {
   'a4-portrait': { width: 210, height: 297, pageRule: 'A4 portrait', padding: 12, name: 'A4 竖版', note: '适合家用打印机、成长书和相框，也是当前版式的推荐尺寸。' },
@@ -898,7 +1012,7 @@ function renderPhotoTimeline(records, container) {
     const media = isVideo
       ? `<video data-media-id="${escapeHtml(r.mediaId)}" muted playsinline preload="metadata"></video><span class="timeline-photo-video-badge"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>`
       : `<img data-media-id="${escapeHtml(r.mediaId)}" alt="${escapeHtml(r.title || '成长照片')}">`;
-    html += `<div class="timeline-photo-stack-item" style="--stack-rotation:${rotation}deg;--stack-shift:${shift}px;--stack-z:${stackIndex + 1};">
+    html += `<div class="timeline-photo-stack-item" data-timeline-month="${escapeHtml(String(r.date).slice(0,7))}" style="--stack-rotation:${rotation}deg;--stack-shift:${shift}px;--stack-z:${stackIndex + 1};">
       <button type="button" class="timeline-photo-open" onclick="viewMedia(${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, '${isVideo ? 'video' : 'image'}', 'timeline-photo', ${inlineArg(r.id)})" aria-label="${isVideo ? '打开视频' : '查看大图'}：${escapeHtml(r.title || '成长照片')}">${media}<span class="timeline-photo-hover-caption"><span>${escapeHtml(formatDate(r.date))}</span><span class="timeline-photo-hover-content" title="${escapeHtml(meaningfulContent)}">${escapeHtml(meaningfulContent)} →</span></span></button>
       <div class="timeline-photo-stack-actions">
         <button class="action-btn edit-btn" data-id="${escapeHtml(r.id)}" data-source="record" title="编辑"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
@@ -913,9 +1027,11 @@ function renderPhotoTimeline(records, container) {
 }
 
 function renderTimeline() {
+  refreshTimelineControls();
   const filtered = getTimelineEntries();
+  renderTimelineResults(filtered);
   const container = document.getElementById('timeline-container');
-  if (filtered.length === 0) { container.innerHTML = `<div class="empty-state"><p>还没有记录，点击"添加记录"开始书写成长故事</p></div>`; return; }
+  if (filtered.length === 0) { container.innerHTML = `<div class="empty-state"><p>没有符合条件的记录，可以清空筛选或切换记录类型</p></div>`; return; }
   if (currentTimelineFilter === 'photo') { renderPhotoTimeline(filtered, container); return; }
   let currentYear = null, html = '';
   filtered.forEach((r, index) => {
@@ -937,7 +1053,7 @@ function renderTimeline() {
       contentHtml += `<div class="timeline-media-stage ${index % 2 ? 'align-end' : ''}"><button type="button" class="timeline-media-preview" onclick="viewMedia(${inlineArg(r.mediaId)}, ${inlineArg(r.title)}, '${isVideo ? 'video' : 'image'}', 'timeline', ${inlineArg(r.id)})" aria-label="${isVideo ? '打开视频' : '查看大图'}：${escapeHtml(r.title || '成长记录')}">${mediaElement}<span class="timeline-media-caption"><span>${escapeHtml(formatDate(r.date))}</span><span>${isVideo ? '播放视频' : '查看大图'} →</span></span></button></div>`;
     }
     const safeType = ['diary', 'milestone', 'measurement', 'photo'].includes(r.type) ? r.type : 'diary';
-    html += `<div class="timeline-item"><div class="timeline-marker"><div class="month-day">${d.getMonth()+1}月${d.getDate()}日</div><div class="year">${year}</div></div><div class="timeline-dot ${safeType}"></div><div class="timeline-card"><div class="action-btns"><button class="action-btn edit-btn" data-id="${escapeHtml(r.id)}" data-source="${escapeHtml(r.source || 'record')}" title="编辑"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn delete-btn" data-id="${escapeHtml(r.id)}" data-source="${escapeHtml(r.source || 'record')}" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div><div class="flex items-center mb-2 gap-2" style="padding-right: 80px;"><h3 class="font-serif text-lg font-semibold">${escapeHtml(r.title)}</h3>${getTypeBadge(safeType)}</div>${contentHtml}</div></div>`;
+    html += `<div class="timeline-item" data-timeline-month="${escapeHtml(String(r.date).slice(0,7))}"><div class="timeline-marker"><div class="month-day">${d.getMonth()+1}月${d.getDate()}日</div><div class="year">${year}</div></div><div class="timeline-dot ${safeType}"></div><div class="timeline-card"><div class="action-btns"><button class="action-btn edit-btn" data-id="${escapeHtml(r.id)}" data-source="${escapeHtml(r.source || 'record')}" title="编辑"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn delete-btn" data-id="${escapeHtml(r.id)}" data-source="${escapeHtml(r.source || 'record')}" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div><div class="flex items-center mb-2 gap-2" style="padding-right: 80px;"><h3 class="font-serif text-lg font-semibold">${escapeHtml(r.title)}</h3>${getTypeBadge(safeType)}</div>${contentHtml}</div></div>`;
   });
   container.innerHTML = html; loadMediaElements();
 }
@@ -945,8 +1061,12 @@ function renderTimeline() {
 async function deleteRecord(id) { if (!FSAdapter.isAvailable && !(await connectAndStart())) return; if (confirm('确定要删除这条记录吗？')) { await DB.removeRecord(id); renderAll(); toast('记录已删除'); } }
 
 function renderGrowthChart() {
-  const c = DB.getActiveChild(); if (!c) return; const ms = DB.getMeasurements(); const el = document.getElementById('growth-chart'); if (!el || typeof Chart === 'undefined') return; const ctx = el.getContext('2d');
-  if (growthChart) growthChart.destroy(); if (ms.length === 0) return;
+  const c = DB.getActiveChild(); if (!c) return; const ms = DB.getMeasurements(); const el = document.getElementById('growth-chart'); if (!el) return; const ctx = el.getContext('2d');
+  if (growthChart) { growthChart.destroy(); growthChart = null; }
+  document.getElementById('current-stats').textContent = '还没有测量记录';
+  document.getElementById('growth-trend').textContent = '需要至少 2 次有效记录';
+  if (typeof Chart === 'undefined') { document.getElementById('growth-trend').textContent = '图表组件未加载，请联网后重试'; return; }
+  if (ms.length === 0) return;
   const mn = currentMetric === 'height' ? '身高' : (currentMetric === 'weight' ? '体重' : '头围'); const u = currentMetric === 'weight' ? 'kg' : 'cm';
   const cd = ms.map(m => ({ x: calcMonths(c.birthdate, m.date), y: m.measurements[currentMetric] || null })).filter(p => p.y !== null);
   const gk = c.gender === 'M' ? 'boy' : 'girl'; const st = STANDARDS[gk][currentMetric]; const mo = st.months;
@@ -962,7 +1082,8 @@ function renderGrowthChart() {
   if (last.measurements.weight) si.push(`<div><div class="text-xs" style="color: var(--muted);">体重</div><div class="font-serif text-2xl font-bold">${last.measurements.weight}<span class="text-sm ml-1" style="color: var(--muted);">kg</span></div></div>`);
   if (last.measurements.head) si.push(`<div><div class="text-xs" style="color: var(--muted);">头围</div><div class="font-serif text-2xl font-bold">${last.measurements.head}<span class="text-sm ml-1" style="color: var(--muted);">cm</span></div></div>`);
   document.getElementById('current-stats').innerHTML = `<div class="text-xs font-semibold mb-3" style="color: var(--muted);">最近一次测量</div><div class="grid grid-cols-${si.length > 1 ? si.length : 1} gap-3">${si.join('')}</div><div class="mt-3 pt-3 border-t text-xs" style="border-color: var(--border-soft); color: var(--muted);">${formatDate(last.date)}</div>`;
-  if (ms.length >= 2) { const lm = ms[ms.length - 1], pm = ms[ms.length - 2]; const diff = (lm.measurements[currentMetric] || 0) - (pm.measurements[currentMetric] || 0); const md = calcMonths(c.birthdate, lm.date) - calcMonths(c.birthdate, pm.date); const dd = Math.round((new Date(lm.date) - new Date(pm.date)) / 86400000); let ts = '上次测量'; if (md > 0) ts = `${md}个月前`; else if (dd > 0) ts = `${dd}天前`; document.getElementById('growth-trend').innerHTML = `<div class="text-xs font-semibold mb-3" style="color: var(--muted);">增长趋势 (对比${ts})</div><div class="space-y-2 text-sm"><div class="flex justify-between"><span style="color: var(--muted);">${mn}增长</span><span class="font-semibold" style="color: var(--sage);">+${diff.toFixed(1)} ${u}</span></div></div>`; } else document.getElementById('growth-trend').innerHTML = `<div class="text-xs font-semibold mb-3" style="color: var(--muted);">增长趋势</div><p class="text-sm" style="color: var(--muted);">需要至少 2 次记录</p>`;
+  const valid = ms.filter(m => Number.isFinite(m.measurements[currentMetric]) && m.measurements[currentMetric] > 0);
+  if (valid.length >= 2) { const lm = valid[valid.length - 1], pm = valid[valid.length - 2]; const diff = lm.measurements[currentMetric] - pm.measurements[currentMetric]; const md = calcMonths(c.birthdate, lm.date) - calcMonths(c.birthdate, pm.date); const dd = Math.round((new Date(lm.date) - new Date(pm.date)) / 86400000); let ts = '上次测量'; if (md > 0) ts = `${md}个月前`; else if (dd > 0) ts = `${dd}天前`; document.getElementById('growth-trend').innerHTML = `<div class="text-xs font-semibold mb-3" style="color: var(--muted);">增长趋势 (对比${ts})</div><div class="space-y-2 text-sm"><div class="flex justify-between"><span style="color: var(--muted);">${mn}增长</span><span class="font-semibold" style="color: var(--sage);">${diff > 0 ? '+' : ''}${diff.toFixed(1)} ${u}</span></div></div>`; } else document.getElementById('growth-trend').innerHTML = `<div class="text-xs font-semibold mb-3" style="color: var(--muted);">增长趋势</div><p class="text-sm" style="color: var(--muted);">需要至少 2 次记录</p>`;
 }
 
 function renderMilestones() {
@@ -1144,6 +1265,22 @@ function selectProjectPrintSize(sizeId) {
   document.getElementById('print-project-btn').classList.add('hidden');
 }
 
+let projectDraftChildId = null;
+async function saveProjectDraft() {
+  if (!projectDraftChildId || !FSAdapter.isAvailable || FSAdapter.writeBlocked) return;
+  DB.data.photoProjects = DB.data.photoProjects || {};
+  const draft = {
+    type: currentProjectType, template: currentProjectTemplate, size: currentProjectPrintSize,
+    year: document.getElementById('project-year').value, selected: [...projectSelection],
+    pages: bookPages.map(page => ({ ...page, photoIds: [...page.photoIds] })), crops: [...projectCrops]
+  };
+  if (JSON.stringify(DB.data.photoProjects[projectDraftChildId]) === JSON.stringify(draft)) return;
+  DB.data.photoProjects[projectDraftChildId] = draft;
+  const status = document.getElementById('project-draft-status');
+  status.textContent = '正在保存草稿…';
+  try { await DB.save(); status.textContent = '草稿已保存，可关闭后继续编辑'; }
+  catch (error) { status.textContent = '草稿保存失败，请重试'; throw error; }
+}
 function openPhotoProjectModal() {
   const records = getPrintablePhotoRecords();
   projectSelection = new Set(records.filter(r => r.gallerySelected).map(r => r.id));
@@ -1152,11 +1289,25 @@ function openPhotoProjectModal() {
   currentProjectPrintSize = 'a4-portrait';
   bookPages = [];
   projectCrops = new Map();
-  document.querySelectorAll('[data-project-type]').forEach(el => el.classList.toggle('active', el.dataset.projectType === 'calendar'));
-  document.getElementById('project-year').value = new Date().getFullYear() + 1;
+  projectDraftChildId = DB.data.activeChildId;
+  const draft = DB.data.photoProjects?.[projectDraftChildId];
+  if (draft) {
+    currentProjectType = PROJECT_TEMPLATES[draft.type] ? draft.type : 'calendar';
+    currentProjectTemplate = PROJECT_TEMPLATES[currentProjectType].some(t => t.id === draft.template) ? draft.template : PROJECT_TEMPLATES[currentProjectType][0].id;
+    currentProjectPrintSize = PRINT_SIZE_PRESETS[draft.size] ? draft.size : 'a4-portrait';
+    const ids = new Set(records.map(r => r.id));
+    projectSelection = new Set((draft.selected || []).filter(id => ids.has(id)));
+    bookPages = (draft.pages || []).map(page => ({ ...page, photoIds: page.photoIds.map(id => ids.has(id) ? id : '') }));
+    bookPageSerial = Math.max(0, ...bookPages.map(page => Number(page.id.replace('bp', '')) || 0));
+    projectCrops = new Map(draft.crops || []);
+  }
+  document.getElementById('project-draft-status').textContent = !FSAdapter.isAvailable ? '示例体验：连接文件夹后才能保存作品草稿' : draft ? '已恢复上次草稿' : '编辑后自动保存草稿';
+  document.querySelectorAll('[data-project-type]').forEach(el => el.classList.toggle('active', el.dataset.projectType === currentProjectType));
+  document.getElementById('project-year').value = draft?.year || new Date().getFullYear() + 1;
   document.getElementById('project-print-size').value = currentProjectPrintSize;
-  document.getElementById('calendar-year-field').classList.remove('hidden');
-  document.getElementById('book-page-composer').classList.add('hidden');
+  document.getElementById('calendar-year-field').classList.toggle('hidden', currentProjectType !== 'calendar');
+  document.getElementById('book-page-composer').classList.toggle('hidden', currentProjectType !== 'book');
+  if (currentProjectType === 'book') renderBookPageComposer();
   document.getElementById('project-preview').classList.add('hidden');
   document.getElementById('print-project-btn').classList.add('hidden');
   renderProjectTemplates();
@@ -1311,7 +1462,54 @@ function getCropAdjustment(key) {
 function cropFrameMarkup(key, url, className = '') {
   const crop = getCropAdjustment(key);
   const imageStyle = `object-position:${crop.x}% ${crop.y}%;transform:scale(${crop.zoom});`;
-  return `<div class="${escapeHtml(className)} crop-frame" data-crop-key="${escapeHtml(key)}"><img src="${escapeHtml(url)}" alt="" style="${imageStyle}"><button type="button" class="crop-adjust-button" onclick="openCropEditor(${inlineArg(key)}, ${inlineArg(url)})">调整裁剪</button></div>`;
+  return `<div class="${escapeHtml(className)} crop-frame" data-crop-key="${escapeHtml(key)}"><img src="${escapeHtml(url)}" alt="" style="${imageStyle}"><span class="crop-drag-hint">↕ 拖动调整上下位置</span><button type="button" class="crop-adjust-button" onclick="event.stopPropagation(); openCropEditor(${inlineArg(key)}, ${inlineArg(url)})">调整裁剪</button></div>`;
+}
+
+function findPreviewCropFrame(key, preview = document.getElementById('project-preview')) {
+  if (!preview || !key) return null;
+  return Array.from(preview.querySelectorAll('.crop-frame[data-crop-key]')).find(frame => frame.dataset.cropKey === key) || null;
+}
+
+function applyCropToPreviewFrame(frame, crop) {
+  const image = frame?.querySelector(':scope > img');
+  if (!image) return;
+  image.style.objectPosition = `${crop.x}% ${crop.y}%`;
+  image.style.transform = `scale(${crop.zoom})`;
+}
+
+function bindProjectPreviewCropDragging(preview) {
+  if (!preview) return;
+  preview.querySelectorAll('.crop-frame[data-crop-key]').forEach(frame => {
+    frame.classList.add('crop-direct-drag');
+    frame.onpointerdown = event => {
+      if (event.target.closest('.crop-adjust-button') || event.button !== 0) return;
+      const key = frame.dataset.cropKey;
+      const crop = getCropAdjustment(key);
+      frame.setPointerCapture(event.pointerId);
+      frame.classList.add('dragging');
+      previewCropDragState = { pointerId: event.pointerId, key, frame, startY: event.clientY, cropY: crop.y, moved: false };
+      event.preventDefault();
+    };
+    frame.onpointermove = event => {
+      const state = previewCropDragState;
+      if (!state || state.pointerId !== event.pointerId || state.frame !== frame) return;
+      const rect = frame.getBoundingClientRect();
+      const crop = getCropAdjustment(state.key);
+      crop.y = clampCropValue(state.cropY - ((event.clientY - state.startY) / Math.max(1, rect.height)) * 100, 0, 100);
+      state.moved = state.moved || Math.abs(event.clientY - state.startY) > 2;
+      projectCrops.set(state.key, crop);
+      applyCropToPreviewFrame(frame, crop);
+    };
+    const stopPreviewDragging = event => {
+      const state = previewCropDragState;
+      if (!state || state.pointerId !== event.pointerId || state.frame !== frame) return;
+      frame.classList.remove('dragging');
+      previewCropDragState = null;
+      if (state.moved) toast('照片上下位置已保存');
+    };
+    frame.onpointerup = stopPreviewDragging;
+    frame.onpointercancel = stopPreviewDragging;
+  });
 }
 
 function syncCropEditorUI() {
@@ -1339,13 +1537,25 @@ function updateCropDraftFromControls() {
   syncCropEditorUI();
 }
 
+function sizeCropEditorStageToPreview(key) {
+  const stage = document.getElementById('crop-editor-stage');
+  const sourceFrame = findPreviewCropFrame(key);
+  if (!stage) return;
+  const sourceRect = sourceFrame?.getBoundingClientRect();
+  const ratio = sourceRect?.width && sourceRect?.height ? sourceRect.width / sourceRect.height : 16 / 9;
+  const availableWidth = stage.parentElement?.clientWidth || 672;
+  const maxHeight = Math.max(220, Math.min(520, window.innerHeight * 0.54));
+  const width = Math.min(availableWidth, maxHeight * ratio);
+  stage.style.width = `${Math.round(width)}px`;
+  stage.style.height = `${Math.round(width / ratio)}px`;
+}
+
 function openCropEditor(key, url) {
   activeCropKey = key;
   cropDraft = getCropAdjustment(key);
   const image = document.getElementById('crop-editor-image');
   const stage = document.getElementById('crop-editor-stage');
   image.src = url;
-  syncCropEditorUI();
   stage.onpointerdown = event => {
     stage.setPointerCapture(event.pointerId);
     stage.classList.add('dragging');
@@ -1365,6 +1575,10 @@ function openCropEditor(key, url) {
   stage.onpointerup = stopDragging;
   stage.onpointercancel = stopDragging;
   openModal('modal-crop-editor');
+  requestAnimationFrame(() => {
+    sizeCropEditorStageToPreview(key);
+    syncCropEditorUI();
+  });
 }
 
 function resetCropDraft() {
@@ -1379,9 +1593,11 @@ function closeCropEditor() {
 
 async function saveCropAdjustment() {
   if (!activeCropKey) return;
-  projectCrops.set(activeCropKey, { ...cropDraft });
+  const savedCropKey = activeCropKey;
+  projectCrops.set(savedCropKey, { ...cropDraft });
+  try { await saveProjectDraft(); } catch (error) { return; }
   closeCropEditor();
-  await buildPhotoProject();
+  await buildPhotoProject({ focusCropKey: savedCropKey });
   toast('这张照片的裁剪位置已保存');
 }
 
@@ -1396,7 +1612,8 @@ function getPrintableRecordContent(record) {
   return content === '自动导入' ? '' : content;
 }
 
-async function buildPhotoProject() {
+async function buildPhotoProject(options = {}) {
+  const focusCropKey = options && typeof options === 'object' ? options.focusCropKey || '' : '';
   const records = getPrintablePhotoRecords().filter(r => projectSelection.has(r.id)).reverse();
   if (!records.length) { toast('请至少选择一张照片'); return; }
   const photos = [];
@@ -1453,8 +1670,16 @@ async function buildPhotoProject() {
   preview.className = `project-preview project-${currentProjectType}`;
   preview.innerHTML = html;
   applyProjectPrintSize(preview);
+  bindProjectPreviewCropDragging(preview);
   document.getElementById('print-project-btn').classList.remove('hidden');
-  preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (focusCropKey) {
+    requestAnimationFrame(() => {
+      const targetFrame = findPreviewCropFrame(focusCropKey, preview);
+      (targetFrame?.closest('.print-page') || targetFrame)?.scrollIntoView({ behavior: 'auto', block: 'center' });
+    });
+  } else {
+    preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   toast('打印预览已生成');
 }
 
@@ -1492,11 +1717,14 @@ function renderChildrenList() { document.getElementById('children-list').innerHT
 
 function renderAll() { if (!DB.data) return; renderNav(); renderHero(); renderStats(); renderGallery(); renderGrowthChart(); renderMilestones(); renderTimeline(); }
 
-function switchChild(id) { DB.data.activeChildId = id; DB.save(); renderAll(); }
+function switchChild(id) { DB.data.activeChildId = id; if (FSAdapter.isAvailable) DB.save().catch(() => {}); resetTimelineQuery(false); renderAll(); }
 function switchTimelineFilter(f) { currentTimelineFilter = f; document.querySelectorAll('#timeline-filters .chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f)); renderTimeline(); }
 function switchMetric(m) { currentMetric = m; document.querySelectorAll('[data-metric]').forEach(b => b.classList.toggle('active', b.dataset.metric === m)); renderGrowthChart(); }
 function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) {
+async function closeModal(id) {
+  if (id === 'modal-photo-project') {
+    try { await saveProjectDraft(); } catch (error) { return; }
+  }
   document.getElementById(id).classList.remove('active');
   if (id === 'modal-image-viewer') {
     const viewer = document.getElementById('viewer-container');
@@ -1635,7 +1863,7 @@ function getMediaViewerCollection(context = 'auto') {
       .filter(item => item.mediaId)
       .map(item => ({ ...item, title: item.displayName, content: item.content || '' }));
   }
-  if (context === 'timeline-photo') return DB.getRecords().filter(item => item.type === 'photo' && item.mediaId);
+  if (context === 'timeline-photo') return getTimelineEntries().filter(item => item.type === 'photo' && item.mediaId);
   if (context === 'timeline') return getTimelineEntries().filter(item => item.mediaId);
   return getSelectableMediaEntries();
 }
@@ -1671,7 +1899,7 @@ async function renderMediaViewer() {
   const meta = dateText || titleText
     ? `<div class="viewer-meta"><span>${escapeHtml(dateText)}</span>${titleText ? `<span class="viewer-meta-title">${escapeHtml(titleText)}</span>` : ''}</div>`
     : '';
-  container.innerHTML = `<div class="viewer-shell">${closeButton}<div class="viewer-stage">${previousButton}${media}${nextButton}</div>${meta}</div>`;
+  container.innerHTML = `<div class="viewer-shell">${closeButton}<div class="viewer-stage">${previousButton}${media}${nextButton}</div>${meta}${!isVideo ? `<button type="button" class="viewer-studio-button" onclick="MediaStudio.open('meme', ${inlineArg(item.mediaId)})">用这张照片制作表情包</button>` : ''}</div>`;
 }
 
 function navigateMediaViewer(delta) {
@@ -1880,6 +2108,12 @@ async function scanAndImportMedia() {
 }
 
 function bindEvents() {
+  const projectModal = document.getElementById('modal-photo-project');
+  const persistDraft = () => { if (projectModal.classList.contains('active')) saveProjectDraft().catch(() => {}); };
+  projectModal.addEventListener('click', persistDraft);
+  projectModal.addEventListener('change', persistDraft);
+  projectModal.addEventListener('pointerup', persistDraft);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) persistDraft(); });
   const tc = document.getElementById('timeline-container');
   if (tc) tc.addEventListener('click', async (e) => {
     const editButton = e.target.closest('.edit-btn');
@@ -1934,6 +2168,7 @@ function bindEvents() {
 
 async function initApp() {
   bindEvents();
+    if ('IntersectionObserver' in window) { const obs = new IntersectionObserver((entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }), { threshold: 0.1 }); document.querySelectorAll('.reveal').forEach(el => obs.observe(el)); } else document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
   try {
     DB.data = DB.getDemoData();
     renderAll();
@@ -1941,12 +2176,14 @@ async function initApp() {
     if (!window.showDirectoryPicker) { setStorageMode(false, '当前浏览器不支持直接保存到文件夹。请使用电脑端 Chrome 或 Edge；示例内容仍可浏览。'); return; }
     const hasSavedHandle = await FSAdapter.init();
     if (hasSavedHandle) { const perm = await FSAdapter.rootDir.queryPermission({ mode: 'readwrite' }); if (perm === 'granted') { await FSAdapter.verifyPermission(); await FSAdapter.setupDirs(); await DB.load(); renderAll(); setStorageMode(true); } else document.getElementById('permission-banner').style.display = 'block'; }
-    if ('IntersectionObserver' in window) { const obs = new IntersectionObserver((entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }), { threshold: 0.1 }); document.querySelectorAll('.reveal').forEach(el => obs.observe(el)); } else document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
-  } catch (err) { console.error("初始化错误:", err); toast("初始化失败，请刷新重试"); }
+  } catch (err) { console.error("初始化错误:", err); setStorageMode(false, err.message); toast(err.message || '初始化失败，请刷新重试'); }
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp);
 else initApp();
 </script>
+<script src="./enhancements.js"></script>
+<script src="./scrapbook.js"></script>
+<script src="./media-studio.js"></script>
 </body>
 </html>
