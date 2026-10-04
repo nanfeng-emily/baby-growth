@@ -6,11 +6,16 @@ const fs=require('node:fs');
 const out=path.resolve(__dirname,'../../baby-growth-preview/studio');fs.mkdirSync(out,{recursive:true});
 (async()=>{
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
- for(const mobile of [false,true]){
+ for(const mobile of process.env.STUDIO_TEST_MOBILE_ONLY ? [true] : [false,true]){
+  console.log('START',mobile?'mobile':'desktop');
   const page=await browser.newPage({viewport:{width:mobile?390:1280,height:900},isMobile:mobile,hasTouch:mobile,acceptDownloads:true});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.route(/^https?:/,route=>route.abort());
-  await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href);
+  await page.route(/^https?:/,route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
+  await page.addInitScript(()=>{
+   window.audioStarts=[];const original=AudioBufferSourceNode.prototype.start;
+   AudioBufferSourceNode.prototype.start=function(...args){window.audioStarts.push({offset:args[1]||0,loop:this.loop,start:this.loopStart,end:this.loopEnd});return original.apply(this,args);};
+  });
+  await page.goto('http://127.0.0.1:8080/index.html');
   await page.addStyleTag({content:'.hidden{display:none}.text-xs{font-size:12px}.text-sm{font-size:14px}'});
   await page.evaluate(()=>{
    FSAdapter.getMediaUrl=async id=>'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480"><rect width="640" height="480" fill="${id==='p0'?'#b1b890':'#c89672'}"/><circle cx="320" cy="210" r="130" fill="#fff1c9"/><circle cx="280" cy="190" r="12"/><circle cx="360" cy="190" r="12"/><path d="M270 250 Q320 300 370 250" stroke="#684e3a" stroke-width="10" fill="none"/></svg>`);
@@ -33,6 +38,40 @@ const out=path.resolve(__dirname,'../../baby-growth-preview/studio');fs.mkdirSyn
   await page.screenshot({path:path.join(out,`meme-ui-${mobile?'mobile':'desktop'}.png`)});
   await page.evaluate(()=>MediaStudio.close());
   await page.evaluate(()=>MediaStudio.open('video'));
+  console.log('Music checks');
+  assert.deepEqual(await page.locator('#studio-music option').evaluateAll(items=>items.map(item=>item.value)),['none','heart','newboy','moon','onion']);
+  assert.equal(await page.evaluate(()=>performance.getEntriesByType('resource').some(r=>r.name.includes('music-clips.js')||r.name.includes('/music-assets/'))),false,'homepage and studio must not load music before selection');
+  await page.locator('#studio-music').selectOption('onion');
+  await page.locator('#studio-listen').click();
+  await page.waitForFunction(()=>document.getElementById('studio-listen').getAttribute('aria-pressed')==='true');
+  await page.locator('#studio-listen').click();
+  assert.equal(await page.locator('#studio-listen').getAttribute('aria-pressed'),'false');
+  for(const song of ['heart','newboy','moon','onion']) {
+   console.log('Checking',song);
+   await page.locator('#studio-music').selectOption(song);
+   await page.locator('#studio-listen').click();
+   await page.waitForFunction(()=>document.getElementById('studio-listen').getAttribute('aria-pressed')==='true');
+   await page.locator('#studio-listen').click();
+    assert(await page.locator('#studio-music-player').evaluate(audio=>audio.duration>60 && (audio.currentSrc.startsWith('blob:') || new URL(audio.currentSrc).pathname.endsWith('.mp3'))));
+    const expected={heart:183.11,newboy:252.81,moon:183}[song];
+    if(expected)assert(Math.abs(await page.locator('#studio-music-player').evaluate(audio=>audio.duration)-expected)<.1,'converted song must preserve full duration');
+  }
+  await page.locator('#studio-music').selectOption('newboy');
+  await page.waitForFunction(()=>document.getElementById('studio-music-end').value!=='' && !document.getElementById('studio-music-length').textContent.includes('正在'));
+  await page.waitForFunction(()=>Number.isFinite(document.getElementById('studio-music-player').duration));
+  await page.locator('#studio-music-player').evaluate(async audio=>{audio.currentTime=35;await audio.play();});
+  await page.getByRole('button',{name:'设为开始点',exact:true}).click();
+  assert(Number(await page.locator('#studio-music-start').inputValue())>=35);
+  assert.equal(await page.locator('#studio-music-player').evaluate(audio=>audio.paused),false);
+  await page.locator('#studio-music-player').evaluate(audio=>{audio.currentTime=42;audio.pause();});
+  await page.getByRole('button',{name:'设为结束点',exact:true}).click();
+  assert.equal(Number(await page.locator('#studio-music-end').inputValue()),42);
+  await page.locator('#studio-music-start').fill('30');await page.locator('#studio-music-end').fill('20');
+  await page.locator('#studio-listen').click();await page.waitForFunction(()=>document.getElementById('studio-status').textContent.includes('截取范围'));
+  await page.locator('#studio-music-end').fill('31');await page.locator('#studio-listen').click();
+  await page.waitForFunction(()=>document.getElementById('studio-listen').getAttribute('aria-pressed')==='true');
+  assert.equal(await page.evaluate(()=>window.audioStarts.at(-1).offset),30);
+  await page.waitForFunction(()=>document.getElementById('studio-listen').getAttribute('aria-pressed')==='false');
   await page.locator('.studio-photo').nth(0).click();await page.locator('.studio-photo').nth(1).click();
   await page.locator('#studio-duration').selectOption('2');
   await page.locator('#studio-ratio').selectOption(mobile?'portrait':'landscape');
@@ -50,12 +89,14 @@ const out=path.resolve(__dirname,'../../baby-growth-preview/studio');fs.mkdirSyn
   await page.locator('#studio-video').evaluate(v=>v.play());
   await page.waitForTimeout(500);
   assert.ok(await page.locator('#studio-video').evaluate(v=>v.currentTime>.1));
+  assert.ok(await page.locator('#studio-video').evaluate(v=>v.webkitAudioDecodedByteCount>0),'exported video must contain decoded audio');
+  assert.deepEqual(await page.evaluate(()=>window.audioStarts.findLast(item=>item.loop)),{offset:30,loop:true,start:30,end:31});
   await page.screenshot({path:path.join(out,`video-ui-${mobile?'mobile':'desktop'}.png`)});
   await page.locator('#studio-generate').click();await page.locator('#studio-cancel').click();
   await page.waitForFunction(()=>document.getElementById('studio-status').textContent.includes('已取消'));
   assert.equal(await page.evaluate(()=>JSON.stringify(DB.data)),before,'制作不可修改原始记录');
   assert.deepEqual(errors,[]);
-  console.log('PASS',mobile?'mobile':'desktop','single photo entry, PNG, reorder, playable video, cancel, original data unchanged');
+  console.log('PASS',mobile?'mobile':'desktop','full-length song, preview/stop, trimming, PNG, video with audio, cancel, original data unchanged');
   await page.close();
  }
  await browser.close();

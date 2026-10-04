@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>成长拾光 · 记录每一个珍贵的瞬间</title>
-<script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/heic-to@1.5.2/dist/iife/heic-to.js" onerror="this.onerror=null;this.src='https://unpkg.com/heic-to@1.5.2/dist/iife/heic-to.js';"></script>
+<script src="./heic-loader.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -303,6 +302,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 </style>
 <link rel="stylesheet" href="./scrapbook.css">
 <link rel="stylesheet" href="./media-studio.css">
+<link rel="stylesheet" href="./tailwind.css">
 </head>
 <body>
 
@@ -794,11 +794,29 @@ const FSAdapter = {
     return { mediaId: await this.saveMedia(blob, ext), reused: false };
   },
   async copyMediaToFolder(fileHandle) { const file = await fileHandle.getFile(); const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_'); const newName = `media_${Date.now()}_${crypto.randomUUID().slice(0, 8)}_${safeName}`; const newFileHandle = await this.mediaDir.getFileHandle(newName, { create: true }); const writable = await newFileHandle.createWritable(); await writable.write(file); await writable.close(); return newName; },
-  async getMediaUrl(mediaId) { if (!mediaId) return ''; if (mediaId.startsWith('http')) return mediaId; if (this.urlCache[mediaId]) return this.urlCache[mediaId]; try { const fileHandle = await this.mediaDir.getFileHandle(mediaId); const file = await fileHandle.getFile(); const url = URL.createObjectURL(file); this.urlCache[mediaId] = url; return url; } catch (e) { return ''; } },
+  async getMediaUrl(mediaId) {
+    if (!mediaId) return '';
+    if (mediaId.startsWith('http')) return mediaId;
+    const cache = this.urlCache, directory = this.mediaDir;
+    if (cache[mediaId]) return cache[mediaId];
+    if (!directory) return '';
+    let pending = mediaReadPromises.get(cache);
+    if (!pending) { pending = new Map(); mediaReadPromises.set(cache, pending); }
+    if (!pending.has(mediaId)) pending.set(mediaId, Promise.resolve().then(async () => {
+      try {
+        const handle = await directory.getFileHandle(mediaId), file = await handle.getFile();
+        if (this.urlCache !== cache || this.mediaDir !== directory) return '';
+        return cache[mediaId] = URL.createObjectURL(file);
+      } catch (_) { return ''; }
+      finally { pending.delete(mediaId); }
+    }));
+    return pending.get(mediaId);
+  },
   async deleteMedia(mediaId) { if (!mediaId || mediaId.startsWith('http')) return; try { await this.mediaDir.removeEntry(mediaId); } catch (e) {} }
 };
 
 async function getMediaUrl(mediaId) { return await FSAdapter.getMediaUrl(mediaId); }
+const mediaReadPromises = new WeakMap();
 async function loadMediaElements() { const elements = document.querySelectorAll('[data-media-id]'); for (const el of elements) { const id = el.dataset.mediaId; const url = await getMediaUrl(id); if (url) el.src = url; } }
 
 const mediaFingerprintCache = new WeakMap();
@@ -1817,7 +1835,7 @@ async function handleMilestoneSubmit(e) {
       }
       if (mediaType === 'image') {
         if (['heic', 'heif'].includes(originalExt)) {
-          if (typeof HeicTo !== 'function') throw new Error('HEIC 转换组件未加载，请联网后重试');
+          await ensureHeicConverter();
           blob = await HeicTo({ blob: currentMilestoneMediaBlob, type: 'image/jpeg', quality: 0.9 });
         }
         if (!mediaId) blob = await compressImage(blob, 1200, 0.8);
@@ -1940,7 +1958,7 @@ async function handleRecordSubmit(e) {
       }
       if (!mediaId && currentMediaType === 'image') {
         if (['heic', 'heif'].includes(originalExt)) {
-          if (typeof HeicTo !== 'function') throw new Error('HEIC 转换组件未加载，请联网后重试');
+          await ensureHeicConverter();
           blob = await HeicTo({ blob: currentMediaBlob, type: 'image/jpeg', quality: 0.9 });
         }
         blob = await compressImage(blob, 1920, 0.85);
@@ -2061,7 +2079,7 @@ async function scanAndImportMedia() {
         let mediaId;
         let mediaType = item.kind;
         if (item.kind === 'heic') {
-          if (typeof HeicTo !== 'function') throw new Error('新版 HEIC 转换组件未加载，请检查网络后重试');
+          await ensureHeicConverter();
           const convertedBlob = await HeicTo({ blob: item.file, type: 'image/jpeg', quality: 0.9 });
           const optimizedBlob = await compressImage(convertedBlob, 2400, 0.9);
           mediaId = await FSAdapter.saveMedia(optimizedBlob, 'jpg');

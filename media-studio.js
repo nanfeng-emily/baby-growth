@@ -3,6 +3,114 @@ const MediaStudio = (() => {
   let mode = 'meme', entries = [], selected = [], imageCache = new Map();
   let version = 0, busy = false, cancelled = false, recorder = null, stream = null, animation = 0, musicContext = null, musicNodes = [];
   let resultUrl = '', downloadName = '', previousFocus = null;
+  let previewAudio = null, previewUrl = '', previewTimer = null, previewVersion = 0;
+  const importedMusic = new Map();
+  const musicAssets = { heart: './music-assets/my-stupid-heart.mp3', newboy: './music-assets/new-boy.mp3', moon: './music-assets/moon-over-hill.mp3', onion: './music-assets/i-am-an-onion.mp3' };
+  const decodedMusic = new Map();
+  let musicSelectionVersion = 0;
+  let explorerUrl = '';
+  function explore() { stopPreview(true); }
+  function markMusic(edge) {
+    const player=el('studio-music-player');
+    if(!Number.isFinite(player.duration)){status('音乐还在加载，请稍后标记。');return;}
+    const point=Math.floor(player.currentTime*10)/10;
+    if(edge==='end' && point<=Number(el('studio-music-start').value)){status('结束点需要在开始点之后。');return;}
+    el(`studio-music-${edge}`).value=String(point);
+    if(edge==='start' && point>=Number(el('studio-music-end').value))el('studio-music-end').value=String(Math.floor(player.duration*100)/100);
+    refresh();
+    status(`已将 ${Math.floor(point/60)}:${String(Math.floor(point%60)).padStart(2,'0')} 设为${edge==='start'?'开始':'结束'}点。点击“试听所选片段”检查效果。`);
+  }
+  async function musicFile(key) {
+    if (importedMusic.has(key)) return importedMusic.get(key);
+    if (!musicAssets[key]) return null;
+    const response=await fetch(musicAssets[key]);
+    if(!response.ok)throw new Error('音乐文件加载失败，请检查网站资源。');
+    const file=await response.blob();
+    if(importedMusic.has(key))return importedMusic.get(key);
+    importedMusic.set(key,file);
+    return file;
+  }
+  function stopPreview(keepExplorer = false) {
+    if(!keepExplorer)el('studio-music-player')?.pause();
+    ++previewVersion;
+    clearTimeout(previewTimer);
+    if (previewAudio) { previewAudio.pause(); previewAudio.removeAttribute('src'); previewAudio = null; }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = '';
+    if (!busy) releaseRecording();
+    if (el('studio-listen')) { el('studio-listen').textContent = '试听所选片段'; el('studio-listen').setAttribute('aria-pressed','false'); }
+  }
+  async function decodeMusic(key) {
+    const file=await musicFile(key);
+    if(!file)throw new Error('请先载入音乐文件。');
+    if(!decodedMusic.has(file)) {
+      const context=new AudioContext();
+      decodedMusic.set(file, file.arrayBuffer().then(bytes=>context.decodeAudioData(bytes)).finally(()=>context.close()));
+    }
+    return decodedMusic.get(file);
+  }
+  function trimRange(duration) {
+    const start=Number(el('studio-music-start').value),end=el('studio-music-end').value===''?duration:Number(el('studio-music-end').value);
+    if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end>duration+.01||end-start<.1)throw new Error('请设置有效的截取范围：开始不小于 0，结束不超过歌曲时长，片段至少 0.1 秒。');
+    return {start,end:Math.min(end,duration)};
+  }
+  function trimChanged() {stopPreview();refresh();}
+  async function musicChanged() {
+    stopPreview();const version=++musicSelectionVersion,key=el('studio-music').value;
+    const player=el('studio-music-player');player.removeAttribute('src');player.load();
+    if(explorerUrl)URL.revokeObjectURL(explorerUrl);explorerUrl='';
+    el('studio-music-start').value='0';el('studio-music-end').value='';
+    const supported=['heart','newboy','moon','onion'].includes(key);
+    el('studio-music-trim').hidden=!supported;
+    el('studio-music-length').textContent='正在读取音乐时长…';refresh();
+    if(!supported)return;
+    try {
+      let source=musicAssets[key];
+      if(importedMusic.has(key) || !source) {
+        const file=await musicFile(key);if(version!==musicSelectionVersion)return;
+        explorerUrl=URL.createObjectURL(file);source=explorerUrl;
+      }
+      if(version!==musicSelectionVersion)return;
+      player.onloadedmetadata=()=>{
+        if(version!==musicSelectionVersion || !Number.isFinite(player.duration))return;
+        el('studio-music-end').value=String(Math.floor(player.duration*100)/100);
+        el('studio-music-length').textContent=`全曲 ${Math.floor(player.duration/60)} 分 ${(player.duration%60).toFixed(1)} 秒 · 试听和导出使用以下区间，片段不足视频时长时循环播放。`;
+      };
+      player.onerror=()=>{if(version===musicSelectionVersion)el('studio-music-length').textContent='音乐加载失败，请检查音频文件或重新选择本地音频。';};
+      player.src=source;player.volume=Number(el('studio-music-volume').value)/100;
+    }catch(error){if(version===musicSelectionVersion)el('studio-music-length').textContent=error.message;}
+  }
+  async function importMusic(event) {
+    const file = event.target.files[0]; event.target.value = '';
+    if (!file || busy) return;
+    const key = el('studio-music').value;
+    if (!['heart','newboy','moon','onion'].includes(key)) { status('请先选择要替换的歌曲。'); return; }
+    stopPreview(); importedMusic.set(key,file); await musicChanged();
+    status(`已载入 ${file.name}，可以试听或生成视频；音频仅保留在本次页面中。`);
+  }
+  async function listen() {
+    if (busy) return;
+    el('studio-music-player')?.pause();
+    if (previewAudio || musicContext) { stopPreview(); return; }
+    const key=el('studio-music').value;
+    if(key==='none'){status('请先选择背景音乐。');return;}
+    const currentPreview=++previewVersion;
+    try {
+      if(['heart','newboy','moon','onion'].includes(key)) {
+        const buffer=await decodeMusic(key);if(currentPreview!==previewVersion)return;
+        const range=trimRange(buffer.duration);
+        musicContext=new AudioContext();const context=musicContext;
+        const source=context.createBufferSource(),gain=context.createGain();
+        source.buffer=buffer;gain.gain.value=Number(el('studio-music-volume').value)/100;
+        source.connect(gain);gain.connect(context.destination);musicNodes=[source,gain];
+        source.onended=()=>{if(currentPreview===previewVersion)stopPreview();};
+        source.start(0,range.start,range.end-range.start);await context.resume();
+      } else throw new Error('请选择可用的背景音乐。');
+      if(currentPreview!==previewVersion)return;
+      el('studio-listen').textContent='停止试听';el('studio-listen').setAttribute('aria-pressed','true');
+      previewTimer=setTimeout(stopPreview,15000);
+    } catch(error){if(currentPreview===previewVersion){stopPreview();status(`试听失败：${error.message}`);}}
+  }
   const el = id => document.getElementById(id);
   const escape = value => escapeHtml(String(value ?? ''));
   function mount() {
@@ -27,10 +135,11 @@ const MediaStudio = (() => {
             <div><label for="studio-video-title">视频标题</label><input id="studio-video-title" maxlength="32" oninput="MediaStudio.refresh()"></div>
             <div class="studio-row"><div><label for="studio-ratio">画面比例</label><select id="studio-ratio" onchange="MediaStudio.refresh()"><option value="portrait">竖版 9:16</option><option value="landscape">横版 16:9</option><option value="square">方形 1:1</option></select></div><div><label for="studio-duration">每张停留</label><select id="studio-duration" onchange="MediaStudio.refresh()"><option value="2">2 秒</option><option value="3" selected>3 秒</option><option value="4">4 秒</option><option value="5">5 秒</option></select></div></div>
             <div class="studio-row"><div><label for="studio-transition">转场</label><select id="studio-transition" onchange="MediaStudio.refresh()"><option value="fade">柔和淡入淡出</option><option value="cut">直接切换</option></select></div><div><label for="studio-video-caption">画面文字</label><select id="studio-video-caption" onchange="MediaStudio.refresh()"><option value="both">日期 + 记录标题</option><option value="date">仅日期</option><option value="none">不显示</option></select></div></div>
-            <div><label for="studio-music">背景音乐</label><select id="studio-music" onchange="MediaStudio.refresh()"><option value="none">无音乐</option><option value="lullaby">摇篮星光 · 轻柔八音盒</option><option value="sunny">小小晴天 · 木琴律动</option><option value="memory">翻页时光 · 温暖钢琴</option></select></div>
+            <div><label for="studio-music">背景音乐</label><select id="studio-music" onchange="MediaStudio.musicChanged()"><option value="none">无音乐</option><option value="heart">My Stupid Heart · 本地完整版</option><option value="newboy">New Boy · 完整版</option><option value="moon">月亮翻过小山坡 · 完整版</option></select><div class="studio-actions"><button type="button" id="studio-listen" class="btn-secondary" aria-pressed="false" onclick="MediaStudio.listen()">试听所选片段</button><label class="btn-secondary">选择本地音频<input type="file" accept="audio/*" onchange="MediaStudio.importMusic(event)"></label></div><p class="studio-note">片段预览最多 15 秒；下方播放器可完整试听、拖动定位。已内置你提供的完整音频。可选择本地音频替换，刷新后恢复内置音乐。</p></div>
+            <div id="studio-music-trim" hidden><p id="studio-music-length" class="studio-note"></p><audio id="studio-music-player" controls preload="metadata" style="width:100%;margin:12px 0" aria-label="完整音乐试听，可拖动进度定位" onplay="MediaStudio.explore()"></audio><div class="studio-actions"><button type="button" class="btn-secondary" onclick="MediaStudio.markMusic('start')">设为开始点</button><button type="button" class="btn-secondary" onclick="MediaStudio.markMusic('end')">设为结束点</button></div><p class="studio-note">先播放音乐，听到喜欢的位置时点击标记；也可以拖动播放进度条定位。下面的秒数会自动填写。</p><div class="studio-row"><div><label for="studio-music-start">截取开始（秒）</label><input id="studio-music-start" type="number" min="0" step="0.1" value="0" oninput="MediaStudio.trimChanged()"></div><div><label for="studio-music-end">截取结束（秒）</label><input id="studio-music-end" type="number" min="0" step="0.1" placeholder="留空使用曲末" oninput="MediaStudio.trimChanged()"></div></div></div>
             <div><label for="studio-music-volume">音乐音量 <span id="studio-music-volume-value">35%</span></label><input id="studio-music-volume" type="range" min="0" max="70" value="35" oninput="MediaStudio.refresh()"></div>
             <div><label>播放顺序</label><button class="btn-secondary" onclick="MediaStudio.sort()">按日期从早到晚</button><div id="studio-order" class="studio-order"></div></div>
-            <p class="studio-note">最多 20 张，音乐为浏览器本地生成的轻柔纯音乐；生成约需与视频时长相同的时间，请保持此页面在前台。</p>
+            <p class="studio-note">最多 20 张，音频在本机处理；生成约需与视频时长相同的时间，请保持此页面在前台。</p>
           </div>
         </fieldset></div>
         <div class="studio-panel"><div class="studio-preview"><canvas id="studio-canvas" width="640" height="640" aria-label="作品预览"></canvas><video id="studio-video" controls playsinline hidden></video></div>
@@ -40,6 +149,7 @@ const MediaStudio = (() => {
         </div>
       </div></div>`;
     document.body.appendChild(root);
+    el('studio-music').add(new Option('我是一棵葱','onion'));
     root.addEventListener('keydown', event => {
       if (event.key === 'Escape') { event.stopPropagation(); close(); }
       if (event.key === 'Tab') {
@@ -64,6 +174,7 @@ const MediaStudio = (() => {
   }
   function open(nextMode, mediaId = null) {
     mount(); if (busy) return;
+    stopPreview();
     previousFocus = document.activeElement;
     mode = nextMode === 'video' ? 'video' : 'meme';
     ++version; imageCache.clear(); clearResult();
@@ -78,6 +189,7 @@ const MediaStudio = (() => {
     el('studio-zoom').value = '100'; el('studio-x').value = el('studio-y').value = '50';
     el('studio-generate').textContent = mode === 'meme' ? '生成 PNG 表情包' : '生成成长视频';
     el('studio-music').value = 'none'; el('studio-music-volume').value = '35';
+    musicChanged();
     el('studio-format').textContent = mode === 'meme' ? '导出 640 × 640 PNG 图片，可保存后作为聊天表情使用。' : videoMime() ? `当前浏览器导出 ${videoMime().includes('mp4') ? 'MP4' : 'WebM'} 视频。` : '当前浏览器不支持本地视频编码，请使用新版电脑 Chrome 或 Edge。';
     closeModal('modal-image-viewer');
     renderPicker();
@@ -91,6 +203,10 @@ const MediaStudio = (() => {
     renderOrder();
   }
   function renderOrder() {
+    const volume=Number(el('studio-music-volume').value)/100;
+    if(previewAudio)previewAudio.volume=volume;
+    if(el('studio-music-player'))el('studio-music-player').volume=volume;
+    if(!busy && musicContext){const gain=musicNodes.find(node=>node?.gain);if(gain)gain.gain.setTargetAtTime(volume,musicContext.currentTime,.02);}
     el('studio-selection').textContent = mode === 'meme' ? `已选 ${selected.length} 张` : `已选 ${selected.length} / 20 张 · 预计 ${selected.length * Number(el('studio-duration').value)} 秒`;
     if (el('studio-music-volume-value')) el('studio-music-volume-value').textContent = `${el('studio-music-volume').value}%`;
     el('studio-order').innerHTML = selected.map((index,position) => `<div class="studio-order-item"><span>${position+1}. ${escape(entries[index].date)} ${escape(entries[index].title)}</span><button aria-label="第 ${position+1} 张上移" ${position === 0 ? 'disabled' : ''} onclick="MediaStudio.move(${position},-1)">↑</button><button aria-label="第 ${position+1} 张下移" ${position === selected.length-1 ? 'disabled' : ''} onclick="MediaStudio.move(${position},1)">↓</button><button aria-label="移除第 ${position+1} 张" onclick="MediaStudio.select(${index})">移除</button></div>`).join('');
@@ -218,7 +334,7 @@ const MediaStudio = (() => {
   }
   async function generate() {
     if(busy || !selected.length || (mode==='video' && selected.length<2))return;
-    clearResult();setBusy(true);cancelled=false;++version;
+    stopPreview();clearResult();setBusy(true);cancelled=false;++version;
     try{
       if(mode==='meme'){
         drawMeme(await loadImage(selected[0]));
@@ -242,13 +358,18 @@ const MediaStudio = (() => {
     if (music !== 'none' && Number(el('studio-music-volume').value) > 0) {
       musicContext = new AudioContext();
       const destination = musicContext.createMediaStreamDestination();
-      const gain = musicContext.createGain(); gain.gain.value = Number(el('studio-music-volume').value) / 100;
-      gain.connect(destination);
-      const patterns = { lullaby:[261.63,329.63,392,523.25,392,329.63], sunny:[261.63,293.66,329.63,392,440,392], memory:[220,261.63,293.66,329.63,392,329.63] };
-      const notes = patterns[music] || patterns.lullaby;
-      const osc = musicContext.createOscillator(); osc.type = music === 'sunny' ? 'triangle' : 'sine'; osc.frequency.value = notes[0]; osc.connect(gain); osc.start();
-      const timer = setInterval(() => { if (!musicContext) return; const index = Math.floor(musicContext.currentTime * 2) % notes.length; osc.frequency.setTargetAtTime(notes[index], musicContext.currentTime, .03); }, 450);
-      musicNodes = [osc, gain, timer, destination];
+      if (['heart','newboy','moon','onion'].includes(music)) {
+        const file=await musicFile(music);
+        if(!file)throw new Error('请先为所选歌曲载入本地音频。');
+        const context=musicContext;
+        const buffer=await decodeMusic(music);
+        if(cancelled)return;
+        const source=context.createBufferSource(),gain=context.createGain();
+        const range=trimRange(buffer.duration);
+        source.buffer=buffer;source.loop=true;source.loopStart=range.start;source.loopEnd=range.end;gain.gain.value=Number(el('studio-music-volume').value)/100;
+        source.connect(gain);gain.connect(destination);source.start(0,range.start);musicNodes=[source,gain];
+      } else throw new Error('请选择可用的背景音乐。');
+      await musicContext.resume();
       const audioTrack = destination.stream.getAudioTracks()[0]; if (audioTrack) stream.addTrack(audioTrack);
     }
     recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:4000000});
@@ -286,8 +407,9 @@ const MediaStudio = (() => {
   }
   function releaseRecording(){cancelAnimationFrame(animation);animation=0;stream?.getTracks().forEach(track=>track.stop());stream=null;recorder=null; const timer=musicNodes.find(node=>typeof node==='number'); if(timer) clearInterval(timer); musicNodes.filter(node=>node?.stop).forEach(node=>{try{node.stop()}catch{}}); musicNodes=[]; if(musicContext){musicContext.close().catch(()=>{});musicContext=null;}}
   function cancel(){if(!busy)return;cancelled=true;cancelAnimationFrame(animation);if(recorder?.state==='recording')recorder.stop();}
-  function close(){if(busy){cancel();return;}++version;clearResult();imageCache.clear();closeModal('modal-media-studio');if(previousFocus?.isConnected)previousFocus.focus();}
+  function close(){stopPreview();if(busy){cancel();return;}++version;clearResult();imageCache.clear();closeModal('modal-media-studio');if(previousFocus?.isConnected)previousFocus.focus();}
   document.addEventListener('visibilitychange',()=>{if(document.hidden && busy && mode==='video'){cancel();}});
   function preset(value){el('studio-caption').value=value;refresh();}
-  return {open,close,select,move,sort,preset,refresh,generate,cancel};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPreview();});
+  return {open,close,select,move,sort,preset,refresh,generate,cancel,listen,stopPreview,musicChanged,importMusic,trimChanged,explore,markMusic};
 })();

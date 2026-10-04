@@ -1,0 +1,16 @@
+# Local measurements include private growth records and screenshots.
+/perf/
+/.netlify/
+/node_modules/
+/__pycache__/
+*.pyc
+*.log
+
+# Personal growth data is stored locally, never in the site repository.
+/db.json
+/media/
+/backups/
+
+# Lossless originals stay on this computer; the website ships full-length MP3s.
+/music-assets/*.flac
+/music-clips.js

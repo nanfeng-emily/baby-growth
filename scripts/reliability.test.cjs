@@ -208,4 +208,24 @@ async function test(name, fn) { await fn(); console.log('PASS', name); }
     context.invalid=invalid;
     assert.throws(()=>run('validateBackupData(invalid)'),/不安全/);
   });
+  await test('并发读取同一媒体只打开一次文件并复用地址', async () => {
+    let reads=0;
+    context.concurrentMedia={getFileHandle:async()=>{reads++;return {getFile:async()=>new Blob(['photo'])};}};
+    run('FSAdapter.mediaDir=concurrentMedia; FSAdapter.urlCache={};');
+    const urls=await run('Promise.all(Array.from({length:8},()=>getMediaUrl("same.jpg")))');
+    assert.equal(reads,1); assert.equal(new Set(urls).size,1);
+    URL.revokeObjectURL(urls[0]);
+  });
+  await test('切换文件夹后旧读取不能写入新地址缓存', async () => {
+    let release;
+    const blocked=new Promise(resolve=>{release=resolve;});
+    context.delayedMedia={getFileHandle:async()=>{await blocked;return {getFile:async()=>new Blob(['old'])};}};
+    run('FSAdapter.mediaDir=delayedMedia; FSAdapter.urlCache={};');
+    const pending=run('getMediaUrl("old.jpg")');
+    await Promise.resolve();
+    run('FSAdapter.mediaDir={}; FSAdapter.urlCache={};');
+    release();
+    assert.equal(await pending,'');
+    assert.equal(run('Object.keys(FSAdapter.urlCache).length'),0);
+  });
 })().catch(error => { console.error(error); process.exitCode=1; });
